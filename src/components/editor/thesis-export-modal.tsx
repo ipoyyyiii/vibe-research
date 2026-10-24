@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Upload } from 'lucide-react';
 import { Button, Modal, SegmentedGroup, TextInput } from '@/components/ui';
 import { useT } from '@/lib/preferences';
 import {
@@ -18,7 +18,7 @@ type ChapterOption = {
 };
 
 type ExportFormat = 'docx' | 'pdf' | 'both';
-type ExportStyle = 'apa' | 'ieee';
+type ExportStyle = 'apa' | 'ieee' | 'custom';
 
 type ExportResponse = {
   ok?: boolean;
@@ -96,6 +96,9 @@ export function ThesisExportModal({
   const [error, setError] = useState<string | null>(null);
   const [errorDetail, setErrorDetail] = useState<string | null>(null);
   const [result, setResult] = useState<ExportResponse | null>(null);
+  const [csl, setCsl] = useState<{ exists: boolean; title: string | null; bytes: number } | null>(null);
+  const [cslBusy, setCslBusy] = useState(false);
+  const [cslError, setCslError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -128,6 +131,11 @@ export function ThesisExportModal({
         setChapters(parseChapters(chapterData?.chapters));
         setAbstract(typeof chapterData?.abstract === 'string' ? chapterData.abstract : null);
         setHasBib(chapterData?.hasBib !== false);
+        const cslRes = await fetch(`/api/projects/${encodeURIComponent(slug)}/csl`);
+        const cslData = (await cslRes.json().catch(() => null)) as
+          | { csl?: { exists: boolean; title: string | null; bytes: number } }
+          | null;
+        if (!cancelled) setCsl(cslData?.csl ?? null);
       } catch {
         if (!cancelled) setLoadError(t('err.server'));
       } finally {
@@ -215,6 +223,49 @@ export function ThesisExportModal({
       setError(t('err.server'));
     } finally {
       setBusy(false);
+    }
+  };
+
+  const uploadCsl = async (file: File | null) => {
+    if (!file) return;
+    setCslBusy(true);
+    setCslError(null);
+    try {
+      const content = await file.text();
+      const res = await fetch(`/api/projects/${encodeURIComponent(slug)}/csl`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: file.name, content }),
+      });
+      const data = (await res.json().catch(() => null)) as
+        | { csl?: { exists: boolean; title: string | null; bytes: number }; error?: string }
+        | null;
+      if (!res.ok || !data?.csl) {
+        setCslError(data?.error ?? t('thesisExport.cslFailed'));
+        return;
+      }
+      setCsl(data.csl);
+      setStyle('custom');
+    } catch {
+      setCslError(t('thesisExport.cslFailed'));
+    } finally {
+      setCslBusy(false);
+    }
+  };
+
+  const removeCsl = async () => {
+    setCslBusy(true);
+    setCslError(null);
+    try {
+      const res = await fetch(`/api/projects/${encodeURIComponent(slug)}/csl`, { method: 'DELETE' });
+      if (!res.ok) {
+        setCslError(t('thesisExport.cslFailed'));
+        return;
+      }
+      setCsl({ exists: false, title: null, bytes: 0 });
+      if (style === 'custom') setStyle('apa');
+    } finally {
+      setCslBusy(false);
     }
   };
 
@@ -372,10 +423,43 @@ export function ThesisExportModal({
                   options={[
                     { value: 'apa', label: t('thesisExport.style.apa') },
                     { value: 'ieee', label: t('thesisExport.style.ieee') },
+                    { value: 'custom', label: t('thesisExport.style.custom'), disabled: !csl?.exists },
                   ]}
                   active={style}
                   onSelect={(value) => setStyle(value as ExportStyle)}
                 />
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  <label className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] transition-colors hover:bg-muted">
+                    {cslBusy ? <Loader2 size={11} className="animate-spin" /> : <Upload size={11} />}
+                    {t('thesisExport.cslUpload')}
+                    <input
+                      type="file"
+                      accept=".csl,application/xml,text/xml"
+                      className="hidden"
+                      onChange={(event) => void uploadCsl(event.target.files?.[0] ?? null)}
+                    />
+                  </label>
+                  {csl?.exists ? (
+                    <>
+                      <span className="min-w-0 flex-1 truncate text-[11px] text-muted-foreground">
+                        {t('thesisExport.cslActive', {
+                          name: csl.title ?? 'style.csl',
+                          kb: (csl.bytes / 1024).toFixed(1),
+                        })}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => void removeCsl()}
+                        className="text-[11px] text-red-600 underline underline-offset-2"
+                      >
+                        {t('thesisExport.cslRemove')}
+                      </button>
+                    </>
+                  ) : (
+                    <span className="text-[11px] text-muted-foreground">{t('thesisExport.cslHint')}</span>
+                  )}
+                </div>
+                {cslError && <p className="text-[11px] text-red-600">{cslError}</p>}
               </div>
             </section>
 
@@ -399,6 +483,11 @@ export function ThesisExportModal({
             {result && (
               <section className="space-y-2 rounded border border-border p-2">
                 <p className="font-medium text-green-700">{t('thesisExport.done')}</p>
+                {result.out?.docx && (
+                  <p className="rounded border border-amber-300 bg-amber-50 p-2 text-[11px] text-amber-900">
+                    {t('thesisExport.tocHint')}
+                  </p>
+                )}
                 {(['docx', 'pdf'] as const).map((kind) => {
                   const output = result.out?.[kind];
                   if (!output) return null;

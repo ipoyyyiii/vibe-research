@@ -11,10 +11,12 @@ import {
   Loader2,
   RotateCcw,
   Trash2,
+  GitCompareArrows,
 } from 'lucide-react';
 import { usePreferences, useT, type Locale } from '@/lib/preferences';
 import { Modal, TextInput } from '@/components/ui';
 import { EmptyState, NoResultsNote, ViewSearchRow, formatSize, type TreeEntry } from '@/components/panels/views-left';
+import { ProvenanceModal } from '@/components/panels/provenance-modal';
 import { computeLineDiff, type DiffRow } from '@/lib/diff';
 import type { SnapshotMeta, SnapshotReason } from '@/lib/versions/types';
 
@@ -95,6 +97,7 @@ const chipClass =
 
 export function VersionsPanel({ slug }: { slug: string }) {
   const t = useT();
+  const [provOpen, setProvOpen] = useState(false);
   const { locale } = usePreferences();
   const [chapters, setChapters] = useState<string[]>([]);
   const [snapshots, setSnapshots] = useState<SnapshotMeta[]>([]);
@@ -366,6 +369,17 @@ export function VersionsPanel({ slug }: { slug: string }) {
           plusTitle={t('versions.addAction')}
           plusBusy={busy}
         />
+        {chapters.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setProvOpen(true)}
+            title={t('prov.hint')}
+            className="mt-1.5 inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-[11px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <GitCompareArrows size={12} />
+            {t('prov.action')}
+          </button>
+        )}
       </div>
 
       {note && (
@@ -642,6 +656,9 @@ export function VersionsPanel({ slug }: { slug: string }) {
           </pre>
         )}
       </Modal>
+      {provOpen && (
+        <ProvenanceModal slug={slug} chapters={chapters} onClose={() => setProvOpen(false)} />
+      )}
     </div>
   );
 }

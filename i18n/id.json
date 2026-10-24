@@ -854,7 +854,14 @@
     "unused": "{n} entri pustaka belum dipakai",
     "close": "Tutup",
     "noChaptersSelected": "Pilih minimal satu bab.",
-    "failed": "Ekspor gagal"
+    "failed": "Ekspor gagal",
+    "style.custom": "Kustom (.csl)",
+    "cslUpload": "Unggah .csl kampus",
+    "cslActive": "Aktif: {name} ({kb} KB)",
+    "cslRemove": "Hapus",
+    "cslHint": "Belum ada file .csl. Unduh dari situs gaya sitasi kampus atau Zotero.",
+    "cslFailed": "File CSL gagal dipakai. Pastikan file .csl yang sah (punya <style>, <citation>, dan <bibliography>).",
+    "tocHint": "Daftar Isi di DOCX masih berupa field. Saat dibuka, Word menanyakan \"This document contains fields that may refer to other files\" — pilih Yes. Kalau tidak muncul: klik kanan di Daftar Isi, lalu Update Field → Update entire table."
   },
   "topbar": {
     "export": "Export",
@@ -865,7 +872,12 @@
     "progressCopy": "Salin",
     "progressFail": "Gagal menyusun laporan",
     "copied": "Tersalin ✓",
-    "close": "Tutup"
+    "close": "Tutup",
+    "slides": "Slide sidang (.pptx)",
+    "slidesBusy": "Membuat slide…",
+    "slidesDone": "Slide siap: export/slide-sidang.pptx",
+    "slidesDownload": "Unduh slide",
+    "slidesFail": "Gagal membuat slide. Pastikan bab 1/4/5 ada."
   },
   "analysisRun": {
     "title": "Jalankan analisis",
@@ -938,5 +950,38 @@
     "saved": "Tersimpan sebagai {path}.",
     "save": "Simpan ke data/",
     "saveFail": "Gagal menyimpan. Coba unggah manual lewat tombol + di panel Data."
+  },
+  "prov": {
+    "title": "Sumber tulisan per paragraf",
+    "intro": "Setiap paragraf ditandai berasal dari mana, dihitung dari riwayat versi bab ini. Berguna saat pembimbing bertanya bagian mana yang ditulis dengan bantuan AI.",
+    "chapter": "Bab",
+    "loading": "Menghitung dari riwayat versi…",
+    "empty": "Belum ada paragraf yang bisa ditandai. Riwayat versi muncul setelah bab disunting atau direvisi agen.",
+    "fail": "Gagal menghitung sumber tulisan. Coba lagi setelah menyunting bab.",
+    "kindHuman": "Manusia",
+    "kindAgent": "Agen",
+    "kindEdited": "Agen → diedit",
+    "kindUnknown": "Sebelum riwayat",
+    "filterAll": "Semua ({n})",
+    "filterAgent": "Dari agen ({n})",
+    "filterEdited": "Diedit manusia ({n})",
+    "filterHuman": "Manusia ({n})",
+    "open": "Buka bab",
+    "action": "Sumber tulisan",
+    "hint": "Lihat paragraf mana yang ditulis agen, manusia, atau sudah diedit"
+  },
+  "sim": {
+    "action": "Cek kemiripan",
+    "hint": "Bandingkan bab dengan abstrak pustaka yang kamu simpan sendiri",
+    "title": "Cek kemiripan lokal",
+    "intro": "Setiap kalimat di bab dibandingkan dengan abstrak paper di pustakamu. Ini bukan Turnitin: hanya pembanding lokal untuk menangkap kutipan yang lupa diberi tanda.",
+    "run": "Jalankan",
+    "running": "Membandingkan…",
+    "empty": "Belum ada paper dengan abstrak. Simpan paper dari tab Jurnal dulu.",
+    "summary": "{chapters} bab · {sentences} kalimat dibandingkan · {sources} sumber · {flagged} ditandai",
+    "hit": "Kemiripan {score}",
+    "source": "Sumber",
+    "open": "Buka",
+    "fail": "Gagal membandingkan. Coba lagi."
   }
 }

@@ -5,6 +5,7 @@ import { isRealInside, resolveInside } from '@/lib/export/paths';
 import { findPdfTool, resolveProjectFolder } from '@/lib/export/shared';
 import { ABSTRACT_PATH, discoverChapterPaths, readChapterTitle } from '@/lib/thesis/chapters';
 import { exportThesis, type ThesisExportFormat } from '@/lib/thesis/export';
+import { customCslInfo } from '@/lib/thesis/csl';
 import { readFrontMatter } from '@/lib/thesis/front-matter';
 import { workspaceError } from '@/lib/workspace/api-error';
 
@@ -69,8 +70,14 @@ export async function POST(
     const record = body as Record<string, unknown>;
 
     const style = record.style ?? 'apa';
-    if (style !== 'apa' && style !== 'ieee') {
+    if (style !== 'apa' && style !== 'ieee' && style !== 'custom') {
       return NextResponse.json({ error: 'Gaya csl gak dikenal' }, { status: 400 });
+    }
+    if (style === 'custom' && !(await customCslInfo(folder)).exists) {
+      return NextResponse.json(
+        { error: 'Gaya sitasi kustom belum diunggah (file .csl).' },
+        { status: 400 },
+      );
     }
 
     const format = (record.format ?? 'both') as ThesisExportFormat;

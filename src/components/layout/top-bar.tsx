@@ -36,6 +36,9 @@ export function TopBar({
   const router = useRouter();
   const t = useT();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [slidesBusy, setSlidesBusy] = useState(false);
+  const [slidesResult, setSlidesResult] = useState<string | null>(null);
+  const [slidesError, setSlidesError] = useState<string | null>(null);
   const [thesisOpen, setThesisOpen] = useState(false);
   const [progressOpen, setProgressOpen] = useState(false);
   const [progress, setProgress] = useState<string | null>(null);
@@ -55,6 +58,31 @@ export function TopBar({
   const downloadBackup = () => {
     setMenuOpen(false);
     window.location.href = `/api/projects/${encodeURIComponent(projectSlug)}/backup`;
+  };
+
+  /** Slide sidang: dibuat dari bab & hasil yang ada, lalu diunduh. */
+  const createSlides = async () => {
+    setSlidesBusy(true);
+    setSlidesError(null);
+    setSlidesResult(null);
+    try {
+      const res = await fetch(`/api/projects/${encodeURIComponent(projectSlug)}/export/slides`, {
+        method: 'POST',
+      });
+      const data = (await res.json().catch(() => null)) as
+        | { ok?: boolean; file?: string; slides?: number; notes?: string[]; error?: string }
+        | null;
+      if (!res.ok || !data?.ok || !data.file) {
+        setSlidesError(data?.error ?? t('topbar.slidesFail'));
+        return;
+      }
+      setSlidesResult(data.file);
+      window.dispatchEvent(new CustomEvent('workspace:tree-refresh'));
+    } catch {
+      setSlidesError(t('topbar.slidesFail'));
+    } finally {
+      setSlidesBusy(false);
+    }
   };
 
   const openProgress = async () => {
@@ -142,6 +170,29 @@ export function TopBar({
               >
                 {t('topbar.fullThesis')}
               </button>
+              <button
+                type="button"
+                disabled={slidesBusy}
+                className="w-full cursor-pointer rounded px-2 py-1.5 text-left transition-colors hover:bg-muted disabled:cursor-wait disabled:opacity-60"
+                onClick={() => void createSlides()}
+              >
+                {slidesBusy ? t('topbar.slidesBusy') : t('topbar.slides')}
+              </button>
+              {slidesResult && (
+                <div className="rounded bg-muted/60 px-2 py-1 text-[11px]">
+                  <p className="truncate" title={slidesResult}>
+                    {t('topbar.slidesDone')}
+                  </p>
+                  <a
+                    href={`/api/projects/${encodeURIComponent(projectSlug)}/raw?path=${encodeURIComponent(slidesResult)}`}
+                    download
+                    className="underline underline-offset-2"
+                  >
+                    {t('topbar.slidesDownload')}
+                  </a>
+                </div>
+              )}
+              {slidesError && <p className="px-2 py-1 text-[11px] text-red-600">{slidesError}</p>}
               <button
                 type="button"
                 className="w-full cursor-pointer rounded px-2 py-1.5 text-left transition-colors hover:bg-muted"

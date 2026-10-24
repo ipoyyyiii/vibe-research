@@ -18,6 +18,7 @@ import {
   Play,
   Plus,
   Search,
+  ShieldCheck,
   Sigma,
   Table2,
   X,
@@ -29,6 +30,7 @@ import { InsertResultModal } from '@/components/panels/insert-result-modal';
 import { AnalysisRunModal } from '@/components/panels/analysis-run-modal';
 import { SampleSizeModal } from '@/components/panels/sample-size-modal';
 import { FormsImportModal } from '@/components/panels/forms-import-modal';
+import { SimilarityModal } from '@/components/panels/similarity-modal';
 import { Button, Modal } from '@/components/ui';
 
 // ── Views panel kiri berbasis TUJUAN (mental model beeblio) ───────────────────
@@ -485,6 +487,7 @@ type ViewProps = {
 export function DraftsView({ slug, entries, onOpenFile }: ViewProps) {
   const t = useT();
   const [query, setQuery] = useState('');
+  const [similarityOpen, setSimilarityOpen] = useState(false);
   const del = useFileDelete(slug);
   const drafts = draftFiles(entries);
   const q = textFilter(query);
@@ -503,6 +506,15 @@ export function DraftsView({ slug, entries, onOpenFile }: ViewProps) {
           onPlus={requestNewDocument}
           plusTitle={t('es.draftsAction')}
         />
+        <button
+          type="button"
+          onClick={() => setSimilarityOpen(true)}
+          title={t('sim.hint')}
+          className="mt-1.5 inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-[11px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        >
+          <ShieldCheck size={12} />
+          {t('sim.action')}
+        </button>
       </div>
       <div className="min-h-0 flex-1">
         {drafts.length === 0 ? (
@@ -552,6 +564,9 @@ export function DraftsView({ slug, entries, onOpenFile }: ViewProps) {
         onCancel={del.cancelDelete}
         onConfirm={() => void del.performDelete()}
       />
+      {similarityOpen && (
+        <SimilarityModal slug={slug} onClose={() => setSimilarityOpen(false)} onOpenFile={onOpenFile} />
+      )}
     </div>
   );
 }

@@ -34,6 +34,8 @@ const STYLE_CSL: Record<'apa' | 'ieee', string> = {
   apa: 'csl/apa.csl',
   ieee: 'csl/ieee.csl',
 };
+/** Gaya kustom disimpan di dalam project (lihat lib/thesis/csl.ts). */
+const CUSTOM_CSL = '.vibe-research/style.csl';
 const DOCX_NAME = 'skripsi-lengkap.docx';
 const PDF_NAME = 'skripsi-lengkap.pdf';
 const PANDOC_TIMEOUT = 120_000;
@@ -46,7 +48,7 @@ export type ThesisExportFormat = 'docx' | 'pdf' | 'both';
 export type ThesisExportOptions = {
   folder: string;
   frontMatter: FrontMatter;
-  style: 'apa' | 'ieee';
+  style: 'apa' | 'ieee' | 'custom';
   format: ThesisExportFormat;
   /** Daftar path relatif project; kosong/undefined → semua dokumen/*.md. */
   chapters?: string[];
@@ -181,7 +183,17 @@ export async function exportThesis(options: ThesisExportOptions): Promise<Thesis
   let docxError: string | undefined;
   let pdfError: string | undefined;
 
-  const csl = path.join(appRoot, STYLE_CSL[options.style]);
+  const csl =
+    options.style === 'custom' ? path.join(folder, CUSTOM_CSL) : path.join(appRoot, STYLE_CSL[options.style]);
+  if (options.style === 'custom') {
+    const exists = await fs
+      .stat(csl)
+      .then((stat) => stat.isFile())
+      .catch(() => false);
+    if (!exists) {
+      throw new Error('Gaya sitasi kustom belum diunggah. Unggah file .csl di dialog ekspor.');
+    }
+  }
   const bibliography = path.join(folder, BIB_FILE);
   const bibliographyArgs = bib.exists
     ? [
@@ -223,7 +235,11 @@ export async function exportThesis(options: ThesisExportOptions): Promise<Thesis
       }
       const patched =
         bib.entries.length > 0
-          ? await injectDocxSources(layout.bytes, bib.entries, options.style)
+          ? await injectDocxSources(
+              layout.bytes,
+              bib.entries,
+              options.style === 'ieee' ? 'ieee' : 'apa',
+            )
           : { bytes: layout.bytes, count: 0 };
       await fs.writeFile(outAbs, patched.bytes);
       out.docx = toProjectPath(folder, outAbs);

@@ -854,7 +854,14 @@
     "unused": "{n} bibliography entries are unused",
     "close": "Close",
     "noChaptersSelected": "Select at least one chapter.",
-    "failed": "Export failed"
+    "failed": "Export failed",
+    "style.custom": "Custom (.csl)",
+    "cslUpload": "Upload campus .csl",
+    "cslActive": "Active: {name} ({kb} KB)",
+    "cslRemove": "Remove",
+    "cslHint": "No .csl file yet. Download one from your campus citation style page or Zotero.",
+    "cslFailed": "Could not use that CSL file. Make sure it is a valid .csl (with <style>, <citation>, and <bibliography>).",
+    "tocHint": "The table of contents in the DOCX is still a field. On open, Word asks \"This document contains fields that may refer to other files\" — choose Yes. If it does not appear: right-click the table of contents, then Update Field → Update entire table."
   },
   "topbar": {
     "export": "Export",
@@ -865,7 +872,12 @@
     "progressCopy": "Copy",
     "progressFail": "Failed to build the report",
     "copied": "Copied ✓",
-    "close": "Close"
+    "close": "Close",
+    "slides": "Defense slides (.pptx)",
+    "slidesBusy": "Building slides…",
+    "slidesDone": "Slides ready: export/slide-sidang.pptx",
+    "slidesDownload": "Download slides",
+    "slidesFail": "Could not build the slides. Make sure chapters 1/4/5 exist."
   },
   "analysisRun": {
     "title": "Run analysis",
@@ -938,5 +950,38 @@
     "saved": "Saved as {path}.",
     "save": "Save to data/",
     "saveFail": "Could not save. Try uploading manually with the + button in the Data panel."
+  },
+  "prov": {
+    "title": "Paragraph provenance",
+    "intro": "Each paragraph is labelled by where it came from, computed from this chapter's version history. Useful when a supervisor asks which parts were written with AI help.",
+    "chapter": "Chapter",
+    "loading": "Computing from version history…",
+    "empty": "No paragraph can be labelled yet. Version history appears after the chapter is edited or revised by the agent.",
+    "fail": "Could not compute provenance. Try again after editing the chapter.",
+    "kindHuman": "Human",
+    "kindAgent": "Agent",
+    "kindEdited": "Agent → edited",
+    "kindUnknown": "Before history",
+    "filterAll": "All ({n})",
+    "filterAgent": "From agent ({n})",
+    "filterEdited": "Edited by human ({n})",
+    "filterHuman": "Human ({n})",
+    "open": "Open chapter",
+    "action": "Provenance",
+    "hint": "See which paragraphs were written by the agent, by you, or edited afterwards"
+  },
+  "sim": {
+    "action": "Check similarity",
+    "hint": "Compare chapters against the abstracts of the papers you saved",
+    "title": "Local similarity check",
+    "intro": "Every sentence in the chapters is compared with the abstracts in your library. This is not Turnitin: a local check to catch quotations that lost their citation.",
+    "run": "Run check",
+    "running": "Comparing…",
+    "empty": "No paper with an abstract yet. Save papers from the Journal tab first.",
+    "summary": "{chapters} chapters · {sentences} sentences compared · {sources} sources · {flagged} flagged",
+    "hit": "Similarity {score}",
+    "source": "Source",
+    "open": "Open",
+    "fail": "Could not run the comparison. Try again."
   }
 }
