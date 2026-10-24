@@ -90,9 +90,12 @@ Design constraints:
 
 | Capability | Detail |
 |---|---|
-| Data intake | CSV/XLSX upload into `data/`; the application never modifies these files |
-| Statistics script | `uji-statistik.py`: descriptives, Shapiro-Wilk, Pearson/Spearman correlation, independent and Welch t-test, one-way ANOVA with Tukey HSD, paired t-test, multiple linear regression (VIF, Durbin-Watson, residual diagnostics), Cronbach's alpha |
-| Report insertion | Tables from `hasil/*.md` can be inserted into a chapter with thesis-style numbering (`Tabel 3.1`); a version snapshot is taken first |
+| Data intake | CSV/XLSX upload into `data/`; the application never modifies these files. A Google Forms importer maps scale questions to `P1..Pn`, converts Likert text answers to numbers, keeps identity and free-text columns, and warns about values it does not recognise |
+| Statistics script | `uji-statistik.py`: descriptives, Shapiro-Wilk, Pearson/Spearman correlation, independent and Welch t-test, one-way ANOVA with Tukey HSD, paired t-test, multiple linear regression (VIF, Durbin-Watson, residual diagnostics, Glejser and Breusch-Pagan), Cronbach's alpha, item validity and reliability |
+| Run from the UI | Two presets (instrument validity, full regression) run the script from the Data panel with a live log, the exit code and the report path. The server resolves the project virtualenv, refuses paths outside the project and enforces a ten minute timeout |
+| Figures | Histograms and Q-Q plots are generated for the dependent variable and the predictors only; `--figures-all` restores every numeric column. Scatter, residual and group box plots are always produced |
+| Sample size | Slovin, Cochran with finite population correction, and Isaac & Michael, each with its formula and assumptions, plus a table ready to paste into Chapter 3 |
+| Report insertion | Tables and figures from `hasil/*.md` can be inserted at the end of a chosen section with thesis-style numbering (`Tabel 3.1`, `Gambar 4.2`); a version snapshot is taken first |
 
 ### 2.4 Revision workflow
 
@@ -116,9 +119,18 @@ Design constraints:
 
 ### 2.6 Interface
 
-- Indonesian (default) and English localisation, 697 keys maintained in parity.
+- Indonesian (default) and English localisation, 885 keys maintained in parity.
 - Light, dark and system themes; collapsible panels; focus mode; resizable three-panel layout.
 - File manager with drag-to-move, file/folder creation, deletion and OS drag-and-drop upload.
+
+### 2.7 Integrity and defense
+
+| Capability | Detail |
+|---|---|
+| Citation style | Upload a campus `.csl` file; it is stored inside the project and passed to pandoc, so the bibliography follows the campus format instead of APA or IEEE |
+| Provenance | Every paragraph is labelled human, agent, or edited after the agent, computed from the version snapshots and their recorded reasons |
+| Similarity pre-check | Chapter sentences are compared with the abstracts of saved papers (five-word shingles, Jaccard similarity, 80% threshold). This is a local pre-check, not a plagiarism service |
+| Defense slides | A 10–14 slide deck is generated from chapters 1, 4 and 5 with the regression tables and the most relevant figures. Sections that do not exist are skipped and listed, never invented |
 
 ## 3. Architecture
 
@@ -161,8 +173,8 @@ application database.
 | Database | SQLite via better-sqlite3 13, Drizzle ORM 0.45, Drizzle Kit 0.31 |
 | Validation | Zod 4 |
 | Literature sources | OpenAlex, Crossref, Semantic Scholar Graph API |
-| Citations | `references.bib`, CSL styles (APA, IEEE) |
-| Export | pandoc `--citeproc`; DOCX reference document; PDF via weasyprint or wkhtmltopdf |
+| Citations | `references.bib`, CSL styles (APA, IEEE, or a project-supplied `.csl`) |
+| Export | pandoc `--citeproc`; DOCX reference document; PDF via weasyprint or wkhtmltopdf; PPTX via pptxgenjs 4 |
 | DOCX post-processing | JSZip (injects `b:Sources` custom XML) |
 | Internationalisation | JSON dictionaries with a React context |
 
@@ -251,8 +263,9 @@ The project directory is created and managed by the application:
 ├─ data/               raw data (read-only for the application)
 ├─ hasil/              analysis reports (markdown)
 ├─ scripts/            reproducible analysis scripts
-├─ export/             exported DOCX/PDF
+├─ export/             exported DOCX/PDF and slide decks
 ├─ .riwayat/           chapter version snapshots
+├─ .vibe-research/     project settings (word targets, campus citation style)
 └─ .opencode/          per-project agent configuration
 ```
 
@@ -345,18 +358,32 @@ Citation markers use the `[@key]` syntax and are resolved against `references.bi
 preflight reports keys that have no bibliography entry. Exported files are final artefacts;
 subsequent edits in an external word processor are not synchronised back.
 
+Two headings at the top of a chapter (`# BAB I` followed by `# PENDAHULUAN`) are merged before
+assembly, so the table of contents lists one entry per chapter instead of two. The DOCX keeps its
+table of contents as a field with `updateFields` enabled, and the PDF is rendered with real page
+numbers. A slide deck is built from the same chapters, so all three artefacts describe the same
+text.
+
+```
+dokumen/*.md ──► slide composer ──► export/slide-sidang.pptx (10–14 slides)
+             └─ tables from hasil/, figures from gambar/
+```
+
 ## 13. API surface
 
-51 route handlers, grouped:
+64 route handlers, grouped:
 
 | Group | Routes |
 |---|---|
 | AI runtime | `ai/status`, `ai/doctor`, `ai/connect`, `ai/models`, `ai/providers`, `ai/capabilities`, `ai/session`, `ai/sessions`, `ai/prompt`, `ai/stream`, `ai/messages`, `ai/usage`, `ai/permission`, `ai/question` |
 | Projects | `projects`, `projects/[slug]` |
 | Project files | `tree`, `file`, `file/move`, `files`, `folders`, `raw`, `upload`, `upload-folder`, `attachments`, `documents`, `spreadsheets` |
-| Literature | `journals/search`, `journals/save`, `journals/related`, `journals/pdf`, `bib`, `bib/sources`, `citations/check` |
-| Research support | `matrix`, `matrix/export`, `notes`, `revisions`, `versions`, `versions/restore`, `insert-result`, `stats-template` |
-| Integrations | `zotero`, `extensions`, `skills`, `export`, `word-save` |
+| Literature and citations | `journals/search`, `journals/save`, `journals/related`, `journals/pdf`, `bib`, `bib/sources`, `citations/check`, `csl` |
+| Research support | `matrix`, `matrix/export`, `notes`, `revisions`, `revisions/import`, `versions`, `versions/restore`, `insert-result`, `stats-template`, `instrument-template`, `targets`, `progress`, `backup` |
+| Analysis | `analysis/run`, `analysis/columns` |
+| Export | `export`, `export/thesis`, `export/front-matter`, `export/slides`, `word-save` |
+| Integrity | `provenance`, `similarity` |
+| Integrations | `zotero`, `extensions`, `skills` |
 | Application | `settings`, `proxy`, `wordcraft/fonts/pack`, `wordcraft/fonts/file/[name]` |
 
 All project-scoped routes resolve the project by slug, validate input with Zod, and reject paths
@@ -404,8 +431,16 @@ compiles routes on demand and is noticeably slower.
 - Markdown is the canonical format. Round-trips through Word or Excel are conversions; complex
   document features such as fields and page numbering are not preserved.
 - DOCX/PDF export is one-way.
-- PDF export does not generate a cover page, table of contents or per-chapter page numbering.
+- The DOCX table of contents is a Word field: Word fills it in when the document is opened
+  (choose Yes when prompted, or right-click the table of contents and pick Update Field). The PDF
+  is generated with a real table of contents and printed page numbers.
 - WordCraft saves DOCX; markdown output requires the embedded export menu.
+- The similarity check compares chapter sentences with saved abstracts only, so it cannot catch a
+  paraphrase whose source sentence never appears in an abstract.
+- Provenance is inferred from version snapshots. Edits made outside the application without a
+  snapshot are attributed to the previous state.
+- Defense slides are generated from existing text with a fixed layout; there is no visual theme
+  editor.
 - Google Scholar is not queried, as it provides no official API.
 
 ## 18. License
