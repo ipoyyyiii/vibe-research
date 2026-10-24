@@ -1,0 +1,18 @@
+# Build context yang diabaikan. Yang besar dan bisa dibangun ulang tidak ikut
+# dikirim ke daemon: node_modules, hasil build Next, dan data lokal.
+node_modules
+.next
+.git
+.gitignore
+.riwayat
+.vibe-research
+data
+*.log
+*.tsbuildinfo
+.env*.local
+.venv
+venv
+__pycache__
+.pytest_cache
+tests
+coverage

@@ -1,0 +1,27 @@
+# Jalankan:  docker compose up -d --build
+# Buka:      http://127.0.0.1:3000
+#
+# Port sengaja diikat ke loopback karena aplikasi ini satu pengguna dan tidak
+# punya autentikasi.
+
+services:
+  vibe-research:
+    build: .
+    image: vibe-research:local
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      NODE_ENV: production
+      # Basis data aplikasi (data/app.db) dan hasil ekspor ada di volume ini.
+      DATA_DIR: /app/data
+    volumes:
+      # Database aplikasi. Hapus baris ini kalau ingin DB ikut di dalam image.
+      - vibe-data:/app/data
+      # Folder skripsi di-mount pada PATH YANG SAMA seperti di host, karena
+      # folder project disimpan sebagai path absolut di database. Kalau jalur
+      # di dalam container berbeda, project lama tidak bisa dibuka.
+      - ${THESIS_DIR:-/home/ubuntu/Documents/skripsi}:${THESIS_DIR:-/home/ubuntu/Documents/skripsi}
+    restart: unless-stopped
+
+volumes:
+  vibe-data:

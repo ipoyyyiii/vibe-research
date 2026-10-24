@@ -212,6 +212,32 @@ pnpm start
 The application listens on `http://127.0.0.1:3000`. The SQLite database is created and migrated
 automatically on first start; no manual database step is required.
 
+### Docker (optional)
+
+```bash
+docker compose up -d --build
+```
+
+The image is multi-stage: Node 24 and pnpm build the application, then a slim runtime stage adds
+what the export pipeline calls out to — pandoc 2.17, WeasyPrint 57, and a Python installation with
+pandas, scipy, statsmodels and matplotlib. WordCraft and GridCraft are already inside `public/`, so
+no setup script runs inside the container. The image is about 3.8 GB.
+
+| Detail | Behaviour |
+|---|---|
+| Binding | Published to `127.0.0.1:3000` only; the application has no authentication |
+| Database | `data/app.db` lives in the named volume `vibe-data` |
+| Thesis folder | Bind mounted at the **same absolute path** as on the host, because projects are stored as absolute paths in the database. Override with `THESIS_DIR=/path/to/thesis docker compose up -d` |
+| Health check | `curl -fsS http://127.0.0.1:3000/` every 30 seconds |
+
+Verified on the reference project: the container answers `200`, `scripts/uji-statistik.py` writes
+its report and its ten figures inside the container, pandoc with `--citeproc` and the bundled CSL
+files produces a DOCX, and WeasyPrint produces a PDF.
+
+The AI assistant spawns the OpenCode CLI, which is **not** included in the image. Editor, analysis,
+similarity, provenance and export work in the container; for the assistant, either extend the
+image with the CLI or run the application directly on the host.
+
 AI provider authentication is performed once, outside the application:
 
 ```bash
