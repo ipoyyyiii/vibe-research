@@ -10,9 +10,12 @@ import {
   type DragEvent as ReactDragEvent,
 } from 'react';
 import {
+  Calculator,
   FileText,
+  FileUp,
   Image as ImageIcon,
   Loader2,
+  Play,
   Plus,
   Search,
   Sigma,
@@ -23,6 +26,9 @@ import {
 import { useT } from '@/lib/preferences';
 import { requestNewDocument } from '@/components/panels/new-doc-modal';
 import { InsertResultModal } from '@/components/panels/insert-result-modal';
+import { AnalysisRunModal } from '@/components/panels/analysis-run-modal';
+import { SampleSizeModal } from '@/components/panels/sample-size-modal';
+import { FormsImportModal } from '@/components/panels/forms-import-modal';
 import { Button, Modal } from '@/components/ui';
 
 // ── Views panel kiri berbasis TUJUAN (mental model beeblio) ───────────────────
@@ -658,7 +664,7 @@ export function FiguresView({ slug, entries }: ViewProps) {
  * (unggah folder gambar/) pindah ke header row — selalu tampil; X di baris →
  * konfirmasi → hapus. Kosong → ss7; drag file OS tetap hidup via DropOverlay.
  */
-export function DataView({ slug, entries }: ViewProps) {
+export function DataView({ slug, entries, onOpenFile }: ViewProps) {
   const t = useT();
   const up = useFolderUpload(slug, 'data', '.csv,.xlsx,.xls,.json');
   const del = useFileDelete(slug);
@@ -668,6 +674,9 @@ export function DataView({ slug, entries }: ViewProps) {
   const [instrumentBusy, setInstrumentBusy] = useState(false);
   /** Laporan hasil analisis (folder hasil/) yang tabelnya mau disisipin ke bab. */
   const [insertSource, setInsertSource] = useState<string | null>(null);
+  const [runOpen, setRunOpen] = useState(false);
+  const [sampleOpen, setSampleOpen] = useState(false);
+  const [formsOpen, setFormsOpen] = useState(false);
   const data = dataFiles(entries);
   /** Laporan analisis (hasil/*.md) — tabelnya bisa disisipin ke draft. */
   const results = useMemo(
@@ -785,6 +794,34 @@ export function DataView({ slug, entries }: ViewProps) {
           {instrumentBusy ? <Loader2 size={12} className="animate-spin" /> : <Sigma size={12} />}
           {t('es.instrumentAction')}
         </button>
+        <button
+          type="button"
+          onClick={() => setRunOpen(true)}
+          disabled={!installedStats}
+          title={installedStats ? t('es.runHint') : t('es.runNeedsScript')}
+          className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-[11px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <Play size={12} />
+          {t('es.runAction')}
+        </button>
+        <button
+          type="button"
+          onClick={() => setSampleOpen(true)}
+          title={t('es.sampleHint')}
+          className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-[11px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        >
+          <Calculator size={12} />
+          {t('es.sampleAction')}
+        </button>
+        <button
+          type="button"
+          onClick={() => setFormsOpen(true)}
+          title={t('es.formsHint')}
+          className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-[11px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        >
+          <FileUp size={12} />
+          {t('es.formsAction')}
+        </button>
         {statsMsg ? (
           <span
             className={`text-[11px] ${
@@ -883,6 +920,19 @@ export function DataView({ slug, entries }: ViewProps) {
         onCancel={del.cancelDelete}
         onConfirm={() => void del.performDelete()}
       />
+      {runOpen && (
+        <AnalysisRunModal
+          slug={slug}
+          files={data
+            .filter((file) => /\.(csv|xlsx|xls)$/i.test(file.path))
+            .map((file) => ({ path: file.path, name: file.name }))}
+          onOpenFile={onOpenFile}
+          onClose={() => setRunOpen(false)}
+          onFinished={() => window.dispatchEvent(new CustomEvent('workspace:tree-refresh'))}
+        />
+      )}
+      {sampleOpen && <SampleSizeModal onClose={() => setSampleOpen(false)} />}
+      {formsOpen && <FormsImportModal slug={slug} onClose={() => setFormsOpen(false)} />}
       {insertSource && (
         <InsertResultModal
           slug={slug}

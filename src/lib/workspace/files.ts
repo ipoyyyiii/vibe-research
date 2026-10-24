@@ -30,6 +30,7 @@ const SKIP_DIRS = new Set([
   '.turbo',
   '.cache',
   '.riwayat',
+  '.vibe-research',
 ]);
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB batas file teks editor
 const TEXT_EXTENSIONS = new Set(['.md', '.txt', '.json', '.jsonc', '.csv', '.ris', '.bib', '.tex']);

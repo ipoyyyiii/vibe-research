@@ -640,7 +640,11 @@ export function LeftPanel({
         )}
 
       {activeTab === 'data' &&
-        viewPane(t('views.data'), chipCount(dataFiles(entries).length), <DataView slug={slug} entries={entries} />)}
+        viewPane(
+          t('views.data'),
+          chipCount(dataFiles(entries).length),
+          <DataView slug={slug} entries={entries} onOpenFile={onOpenFile} />,
+        )}
 
       {activeTab === 'journals' && (
         <div className="flex min-w-0 flex-1 flex-col bg-background text-foreground">

@@ -44,7 +44,7 @@ yarn-error.log*
 next-env.d.ts
 
 # local app db
-data/
+/data/
 *.db-wal
 *.db-shm
 public/wordcraft/

@@ -5,8 +5,10 @@ import { eq } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { matrixRows, paperNotes, projects, revisionItems, savedPapers } from '@/lib/db/schema';
 import { countMarkdownWords, firstHeading } from '@/lib/outline';
+import { mergeChapterHeading } from '@/lib/thesis/chapters';
 import { listAllSnapshots } from '@/lib/versions/store';
 import { parseBib } from '@/lib/journals/bib';
+import { readTargets } from '@/lib/workspace/targets';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -47,7 +49,9 @@ async function readChapters(folder: string): Promise<ChapterRow[]> {
     ]);
     rows.push({
       path: `dokumen/${name}`,
-      title: firstHeading(content) ?? name.replace(/\.md$/i, ''),
+      // `# BAB I` + `# PENDAHULUAN` di file mentah digabung dulu supaya
+      // laporan menampilkan judul bab, bukan cuma "BAB I".
+      title: firstHeading(mergeChapterHeading(content)) ?? name.replace(/\.md$/i, ''),
       words: countMarkdownWords(content),
       modified: stat ? new Date(stat.mtime).toISOString().slice(0, 16).replace('T', ' ') : '–',
     });
@@ -100,12 +104,24 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
     const done = revisions.filter((item) => item.status === 'done').length;
     const doing = revisions.filter((item) => item.status === 'doing').length;
     const todo = revisions.filter((item) => item.status === 'todo').length;
+    // Target kata dipakai untuk menjawab "sudah sejauh apa?", bukan cuma
+    // "berapa kata sekarang" — inilah yang ditanyakan pembimbing.
+    const targets = await readTargets(folder);
+    const targeted = chapters.filter((chapter) => (targets[chapter.path] ?? 0) > 0);
     const chapterLines = chapters.length
-      ? chapters.map(
-          (chapter) =>
-            `| \`${chapter.path}\` | ${chapter.title} | ${chapter.words.toLocaleString('id-ID')} | ${chapter.modified} |`,
-        )
-      : ['| — | _belum ada bab_ | 0 | – |'];
+      ? chapters.map((chapter) => {
+          const target = targets[chapter.path] ?? 0;
+          const pct = target > 0 ? Math.round((chapter.words / target) * 100) : null;
+          return `| \`${chapter.path}\` | ${chapter.title} | ${chapter.words.toLocaleString('id-ID')} | ${
+            target > 0 ? target.toLocaleString('id-ID') : '–'
+          } | ${pct === null ? '–' : `${pct}%`} | ${chapter.modified} |`;
+        })
+      : ['| — | _belum ada bab_ | 0 | – | – | – |'];
+    const targetWords = targeted.reduce((sum, chapter) => sum + (targets[chapter.path] ?? 0), 0);
+    const targetReached = targeted.filter((chapter) => chapter.words >= (targets[chapter.path] ?? 0)).length;
+    const targetLine = targeted.length
+      ? `| Target kata tercapai | ${targetReached}/${targeted.length} bab (total target ${targetWords.toLocaleString('id-ID')} kata) |`
+      : null;
 
     const markdown = [
       `# Laporan Progres — ${project.name}`,
@@ -126,11 +142,12 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
       `| Gambar | ${figures} |`,
       `| Snapshot versi | ${snapshots.length} |`,
       `| Revisi dosen | ${done} selesai · ${doing} dikerjakan · ${todo} belum |`,
+      ...(targetLine ? [targetLine] : []),
       '',
       '## Status bab',
       '',
-      '| Berkas | Judul | Kata | Terakhir diubah |',
-      '|---|---|---:|---|',
+      '| Berkas | Judul | Kata | Target | Capaian | Terakhir diubah |',
+      '|---|---|---:|---:|---:|---|',
       ...chapterLines,
       '',
       '## Revisi dosen',

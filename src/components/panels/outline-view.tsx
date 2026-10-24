@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Columns3, Loader2, ListTree, Target } from 'lucide-react';
 import { useT } from '@/lib/preferences';
 import { countMarkdownWords, firstHeading } from '@/lib/outline';
+import { mergeChapterHeading } from '@/lib/thesis/headings';
 import { requestNewDocument } from '@/components/panels/new-doc-modal';
 import {
   DeleteButton,
@@ -27,10 +28,22 @@ function targetKey(slug: string, path: string): string {
   return `outline:target:${slug}:${path}`;
 }
 
-function readTarget(slug: string, path: string): number {
-  const raw = localStorage.getItem(targetKey(slug, path));
-  const n = raw === null ? 0 : Number(raw);
-  return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
+function readLocalTarget(slug: string, path: string): number {
+  try {
+    const raw = localStorage.getItem(targetKey(slug, path));
+    const n = raw === null ? 0 : Number(raw);
+    return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
+  } catch {
+    return 0;
+  }
+}
+
+async function saveTargets(slug: string, targets: Record<string, number>): Promise<void> {
+  await fetch(`/api/projects/${encodeURIComponent(slug)}/targets`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ targets }),
+  }).catch(() => undefined);
 }
 
 /**
@@ -71,13 +84,35 @@ export function OutlineView({
     [entries],
   );
 
-  // Target: persona load pas slug berubah.
+  // Target dibaca dari project (`.vibe-research/targets.json`) supaya laporan
+  // progres di server bisa memakainya. Angka lama yang masih tersimpan di
+  // localStorage ikut dipindahkan sekali agar tidak hilang.
   useEffect(() => {
-    const next: Record<string, number> = {};
-    for (const entry of docPaths) {
-      next[entry.path] = readTarget(slug, entry.path);
-    }
-    setTargets(next);
+    let alive = true;
+    (async () => {
+      const local: Record<string, number> = {};
+      for (const entry of docPaths) {
+        const value = readLocalTarget(slug, entry.path);
+        if (value > 0) local[entry.path] = value;
+      }
+      let stored: Record<string, number> = {};
+      try {
+        const res = await fetch(`/api/projects/${encodeURIComponent(slug)}/targets`);
+        const data = (await res.json().catch(() => null)) as
+          | { targets?: Record<string, number> }
+          | null;
+        stored = data?.targets ?? {};
+      } catch {
+        // Offline/gagal baca: salinan lokal masih lebih baik daripada kosong.
+      }
+      const merged = { ...local, ...stored };
+      const missing = Object.keys(local).some((path) => local[path] !== stored[path]);
+      if (missing) void saveTargets(slug, merged);
+      if (alive) setTargets(merged);
+    })();
+    return () => {
+      alive = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug, docPaths.map((doc) => doc.path).join('|')]);
 
@@ -99,7 +134,10 @@ export function OutlineView({
           if (!res.ok) throw new Error('fetch gagal');
           const data = (await res.json()) as { content?: string };
           const md = data.content ?? '';
-          return { path: doc.path, words: countMarkdownWords(md), title: firstHeading(md) };
+          // Dua H1 di awal bab digabung supaya daftar menampilkan judul bab,
+          // bukan cuma "BAB I" — sama seperti daftar isi dan laporan progres.
+          const merged = mergeChapterHeading(md);
+          return { path: doc.path, words: countMarkdownWords(md), title: firstHeading(merged) };
         }),
       );
 
@@ -127,15 +165,11 @@ export function OutlineView({
   const saveTarget = useCallback(
     (path: string, value: number) => {
       const clean = Number.isFinite(value) && value > 0 ? Math.floor(value) : 0;
-      try {
-        if (clean > 0) localStorage.setItem(targetKey(slug, path), String(clean));
-        else localStorage.removeItem(targetKey(slug, path));
-      } catch {
-        // localStorage penuh/privat mode — biarkan state aja.
-      }
-      setTargets((prev) => ({ ...prev, [path]: clean }));
+      const next = { ...targets, [path]: clean };
+      setTargets(next);
+      void saveTargets(slug, next);
     },
-    [slug],
+    [slug, targets],
   );
 
   // Filter client-side: cocok (title ?? name) + path, case-insensitive.
