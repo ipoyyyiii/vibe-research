@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Loader2, Upload } from 'lucide-react';
 import { Button, Modal, SegmentedGroup, TextInput } from '@/components/ui';
 import { useT } from '@/lib/preferences';
@@ -102,7 +102,28 @@ export function ThesisExportModal({
   const [logo, setLogo] = useState<{ exists: boolean; path: string | null; bytes: number } | null>(null);
   const [logoBusy, setLogoBusy] = useState(false);
   const [logoError, setLogoError] = useState<string | null>(null);
+  const [verify, setVerify] = useState<{
+    checks: Array<{ id: string; level: 'error' | 'warn'; message: string; path?: string }>;
+    summary: { error: number; warn: number };
+  } | null>(null);
+  const [verifyBusy, setVerifyBusy] = useState(false);
   const [cslError, setCslError] = useState<string | null>(null);
+
+  /** Preflight: pemeriksaan deterministik sebelum ekspor (bukan penilai gaya). */
+  const runVerify = useCallback(async () => {
+    setVerifyBusy(true);
+    try {
+      const res = await fetch(`/api/projects/${encodeURIComponent(slug)}/verify`);
+      const data = (await res.json().catch(() => null)) as
+        | { checks?: Array<{ id: string; level: 'error' | 'warn'; message: string; path?: string }>; summary?: { error: number; warn: number } }
+        | null;
+      if (res.ok && data?.checks) {
+        setVerify({ checks: data.checks, summary: data.summary ?? { error: 0, warn: 0 } });
+      }
+    } finally {
+      setVerifyBusy(false);
+    }
+  }, [slug]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -114,6 +135,7 @@ export function ThesisExportModal({
     setResult(null);
     setSaveState('idle');
 
+    void runVerify();
     const load = async () => {
       try {
         const [frontRes, chaptersRes] = await Promise.all([
@@ -156,7 +178,7 @@ export function ThesisExportModal({
     return () => {
       cancelled = true;
     };
-  }, [open, slug, t]);
+  }, [open, slug, t, runVerify]);
 
   const setField = (key: keyof FrontMatter, value: string) => {
     setFrontMatter((current) => ({ ...current, [key]: value }));
@@ -478,6 +500,48 @@ export function ThesisExportModal({
                   onSelect={(value) => setFormat(value as ExportFormat)}
                 />
               </div>
+              <div className="space-y-1 rounded-md border border-border p-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[11px] font-medium">{t('verify.title')}</span>
+                  <Button
+                    variant="outline"
+                    className="h-6 px-2 text-[10px]"
+                    disabled={verifyBusy}
+                    onClick={() => void runVerify()}
+                  >
+                    {verifyBusy ? <Loader2 size={10} className="animate-spin" /> : t('verify.recheck')}
+                  </Button>
+                </div>
+                {verify && verify.summary.error === 0 && verify.summary.warn === 0 ? (
+                  <p className="text-[11px] text-emerald-700">{t('verify.clean')}</p>
+                ) : verify ? (
+                  <>
+                    <p className="text-[11px]">
+                      <span className={verify.summary.error > 0 ? 'text-red-600' : 'text-muted-foreground'}>
+                        {t('verify.errorCount', { n: String(verify.summary.error) })}
+                      </span>
+                      {' · '}
+                      <span className="text-amber-700">
+                        {t('verify.warnCount', { n: String(verify.summary.warn) })}
+                      </span>
+                    </p>
+                    <ul className="max-h-28 space-y-0.5 overflow-y-auto">
+                      {verify.checks.slice(0, 6).map((check, index) => (
+                        <li
+                          key={`${check.id}-${index}`}
+                          className={`text-[11px] ${check.level === 'error' ? 'text-red-700' : 'text-amber-800'}`}
+                        >
+                          {check.path ? `${check.path.split('/').pop()}: ` : ''}
+                          {check.message}
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                ) : (
+                  <p className="text-[11px] text-muted-foreground">{t('verify.loading')}</p>
+                )}
+              </div>
+
               <div className="space-y-1">
                 <span className="block text-[11px] text-muted-foreground">
                   {t('thesisExport.styleTitle')}

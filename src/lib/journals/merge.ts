@@ -1,6 +1,6 @@
 import type { JournalCard, JournalSource } from './types';
 
-const SOURCE_ORDER: JournalSource[] = ['openalex', 'crossref', 'semantic-scholar'];
+const SOURCE_ORDER: JournalSource[] = ['openalex', 'crossref', 'doaj', 'semantic-scholar'];
 
 /** Normalisasi DOI → "https://doi.org/<lowercase>" atau null kalau bukan DOI valid. */
 export function normalizeDoi(input: string | null | undefined): string | null {
@@ -53,11 +53,12 @@ function dedupe(cards: JournalCard[]): JournalCard[] {
   return [...byId.values()];
 }
 
-/** Relevance: split per source, interleave round-robin (openalex → crossref → semantic-scholar) biar campur adil. */
+/** Relevance: split per source, interleave round-robin (openalex → crossref → doaj → semantic-scholar) biar campur adil. */
 function interleaveBySource(cards: JournalCard[]): JournalCard[] {
   const bySource: Record<JournalSource, JournalCard[]> = {
     openalex: [],
     crossref: [],
+    doaj: [],
     'semantic-scholar': [],
   };
   for (const card of cards) bySource[card.source].push(card);

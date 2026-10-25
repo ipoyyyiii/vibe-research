@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { ChevronDown, FileText, Loader2, Plus, Quote, Search, X } from 'lucide-react';
 import { useT } from '@/lib/preferences';
+import { buildSearchLinks } from '@/lib/journals/links';
 import {
   DeleteButton,
   DeleteConfirmModal,
@@ -19,7 +20,7 @@ import {
 // simpan ke perpustakaan project (backend ikut menambah entri BibTeX).
 // Kontrak API /api/journals/* ditulis lane backend — UI ngikut persis.
 
-export type JournalSource = 'openalex' | 'crossref' | 'semantic-scholar';
+export type JournalSource = 'openalex' | 'crossref' | 'semantic-scholar' | 'doaj';
 
 /** Satu paper dari hasil search/terelasi — bentuknya persis kontrak backend. */
 export type JournalCard = {
@@ -51,12 +52,14 @@ const SOURCE_BADGE: Record<JournalSource, string> = {
   openalex: 'OA',
   crossref: 'Crossref',
   'semantic-scholar': 'S2',
+  doaj: 'DOAJ',
 };
 
 const SOURCE_LABEL: Record<JournalSource, string> = {
   openalex: 'OpenAlex',
   crossref: 'Crossref',
   'semantic-scholar': 'Semantic Scholar',
+  doaj: 'DOAJ (jurnal OA, termasuk Indonesia)',
 };
 
 /** Nama sumber buat chip "Sumber aktif" — yang gak kenal ditampilkan apa adanya. */
@@ -76,8 +79,11 @@ function parsePaper(value: unknown): JournalCard | null {
   if (!value || typeof value !== 'object') return null;
   const v = value as Partial<JournalCard>;
   if (typeof v.id !== 'string' || typeof v.title !== 'string') return null;
+  // Jangan paksa sumber tak dikenal jadi OpenAlex: kartu DOAJ akan salah label.
   const source: JournalSource =
-    v.source === 'crossref' || v.source === 'semantic-scholar' ? v.source : 'openalex';
+    v.source === 'crossref' || v.source === 'semantic-scholar' || v.source === 'doaj'
+      ? v.source
+      : 'openalex';
   return {
     id: v.id,
     title: v.title,
@@ -543,6 +549,39 @@ export function JournalPanel({
             <Search size={13} className={loading ? 'animate-pulse' : ''} />
           </button>
         </div>
+
+        {/* Link-out ke mesin pencari yang biasa dipakai penulis. Bukan scraping:
+            halaman dibuka di browser user, dengan kata kunci yang sudah terisi. */}
+        {query.trim().length >= 2 && (
+          <div className="mt-1.5 flex flex-wrap items-center gap-1">
+            <span className="text-[9px] uppercase tracking-wide text-muted-foreground">
+              {t('journal.searchElsewhere')}
+            </span>
+            {(() => {
+              const links = buildSearchLinks(query.trim());
+              return (
+                <>
+                  <a href={links.scholar} target="_blank" rel="noopener noreferrer"
+                     className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground hover:text-foreground">
+                    Google Scholar
+                  </a>
+                  <a href={links.garuda} target="_blank" rel="noopener noreferrer"
+                     className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground hover:text-foreground">
+                    Garuda
+                  </a>
+                  <a href={links.sinta} target="_blank" rel="noopener noreferrer"
+                     className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground hover:text-foreground">
+                    SINTA
+                  </a>
+                  <a href={links.doaj} target="_blank" rel="noopener noreferrer"
+                     className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground hover:text-foreground">
+                    DOAJ
+                  </a>
+                </>
+              );
+            })()}
+          </div>
+        )}
 
         {sourcesUsed.length > 0 && (
           <div className="mt-1.5 flex flex-wrap items-center gap-1">

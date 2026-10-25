@@ -1,4 +1,6 @@
-export type JournalSource = 'openalex' | 'crossref' | 'semantic-scholar';
+import type { JournalLinks } from './links';
+
+export type JournalSource = 'openalex' | 'crossref' | 'semantic-scholar' | 'doaj';
 
 export type JournalCard = {
   id: string; // DOI dinormalisasi (lowercase, strip "https://doi.org/") JIKA ada doi; else `${source}:${providerId}`
@@ -18,4 +20,6 @@ export type JournalSearchResult = {
   results: JournalCard[];
   sourcesUsed: JournalSource[];
   tookMs: number;
+  /** Link-out pencarian manual ke sumber lain — BUKAN bagian dari `results`. */
+  links: JournalLinks;
 };

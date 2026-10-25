@@ -242,7 +242,7 @@
     "sortRelevance": "relevance",
     "sortCitations": "most cited",
     "sortYear": "newest",
-    "searchHint": "Type a topic and press Enter — results are aggregated from OpenAlex, Crossref, and Semantic Scholar.",
+    "searchHint": "Type a topic and press Enter — results are aggregated from OpenAlex, Crossref, Semantic Scholar and DOAJ (including Indonesian journals). For SINTA/Garuda/Scholar, use the links below the search box.",
     "save": "Save",
     "savedChip": "saved",
     "pdf": "PDF",
@@ -254,7 +254,8 @@
     "abstract": "Abstract",
     "search": "Search",
     "header": "Journal Search",
-    "pdfChip": "{n} reference PDFs"
+    "pdfChip": "{n} reference PDFs",
+    "searchElsewhere": "Also search in"
   },
   "library": {
     "title": "Saved journals",
@@ -1005,5 +1006,13 @@
     "dragHint": "Drag into the left panel to save the PDF",
     "noDoi": "This paper has no DOI, so the PDF cannot be fetched automatically.",
     "noPdf": "No open-access PDF found for this paper."
+  },
+  "verify": {
+    "title": "Check the manuscript",
+    "recheck": "Check again",
+    "clean": "No structural, citation or numbering problems found.",
+    "errorCount": "{n} errors",
+    "warnCount": "{n} warnings",
+    "loading": "Checking the manuscript…"
   }
 }

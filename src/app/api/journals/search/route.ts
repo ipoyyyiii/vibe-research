@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { fetchOpenAlex } from '@/lib/journals/openalex';
 import { fetchCrossref } from '@/lib/journals/crossref';
 import { fetchSemanticScholar } from '@/lib/journals/semanticscholar';
+import { fetchDoaj } from '@/lib/journals/doaj';
+import { buildSearchLinks } from '@/lib/journals/links';
 import { mergeCards } from '@/lib/journals/merge';
 import type { JournalCard, JournalSearchResult, JournalSource } from '@/lib/journals/types';
 
@@ -55,6 +57,10 @@ export async function GET(request: Request) {
         run: () => runProvider((signal) => fetchCrossref(q, limit, { signal })),
       },
       {
+        source: 'doaj',
+        run: () => runProvider((signal) => fetchDoaj(q, limit, signal)),
+      },
+      {
         source: 'semantic-scholar',
         run: () => runProvider((signal) => fetchSemanticScholar(q, limit, { signal })),
       },
@@ -78,6 +84,8 @@ export async function GET(request: Request) {
       results: merged.slice(0, limit),
       sourcesUsed,
       tookMs: Date.now() - startedAt,
+      // Link-out manual ke sumber yang tidak bisa di-query server (Garuda/SINTA) + fallback umum.
+      links: buildSearchLinks(q),
     };
     return NextResponse.json(payload);
   } catch (error) {

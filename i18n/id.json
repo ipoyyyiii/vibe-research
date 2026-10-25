@@ -242,7 +242,7 @@
     "sortRelevance": "relevansi",
     "sortCitations": "sitasi terbanyak",
     "sortYear": "terbaru",
-    "searchHint": "Ketik topik lalu tekan Enter — hasil dikumpulkan dari OpenAlex, Crossref, dan Semantic Scholar.",
+    "searchHint": "Ketik topik lalu tekan Enter — hasil dikumpulkan dari OpenAlex, Crossref, Semantic Scholar, dan DOAJ (termasuk jurnal Indonesia). Untuk SINTA/Garuda/Scholar, pakai tautan di bawah kotak pencarian.",
     "save": "Simpan",
     "savedChip": "tersimpan",
     "pdf": "PDF",
@@ -254,7 +254,8 @@
     "abstract": "abstrak",
     "search": "Cari",
     "header": "Pencarian Jurnal",
-    "pdfChip": "{n} PDF referensi"
+    "pdfChip": "{n} PDF referensi",
+    "searchElsewhere": "Cari juga di"
   },
   "library": {
     "title": "Jurnal tersimpan",
@@ -1005,5 +1006,13 @@
     "dragHint": "Bisa di-drag ke panel kiri untuk menyimpan PDF-nya",
     "noDoi": "Paper ini tidak punya DOI, jadi PDF-nya tidak bisa diambil otomatis.",
     "noPdf": "PDF open-access tidak ditemukan untuk paper ini."
+  },
+  "verify": {
+    "title": "Periksa naskah",
+    "recheck": "Periksa ulang",
+    "clean": "Tidak ada masalah struktur, sitasi, atau penomoran yang terdeteksi.",
+    "errorCount": "{n} error",
+    "warnCount": "{n} peringatan",
+    "loading": "Memeriksa naskah…"
   }
 }
