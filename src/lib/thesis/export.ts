@@ -72,6 +72,33 @@ type ChapterFile = {
   figures: CaptionEntry[];
 };
 
+/**
+ * Beri kelas `caption` pada paragraf "**Tabel 4.1** …" / "**Gambar 4.1** …".
+ * Tanpa penanda ini WeasyPrint bisa menaruh caption di kaki halaman dan
+ * tabelnya di halaman berikutnya.
+ */
+function markCaptionParagraphs(html: string): string {
+  const marked = html.replace(/<p>(<strong>(?:Tabel|Gambar)\s)/g, '<p class="caption">$1');
+  return keepCaptionWithObject(marked);
+}
+
+/**
+ * Bungkus caption bersama tabel/gambarnya dalam satu blok `break-inside: avoid`.
+ * WeasyPrint mengabaikan `break-after: avoid` pada paragraf, jadi tanpa
+ * pembungkus caption bisa tertinggal di kaki halaman. Tabel panjang (> 15 baris)
+ * sengaja tidak dibungkus agar tidak terpotong di halaman.
+ */
+function keepCaptionWithObject(html: string): string {
+  const withTables = html.replace(
+    /<p class="caption">[\s\S]*?<\/p>\s*<table[\s\S]*?<\/table>/g,
+    (block) => ((block.match(/<tr/g) ?? []).length <= 15 ? `<div class="keep-together">${block}</div>` : block),
+  );
+  return withTables.replace(
+    /<p><img[^>]*><\/p>\s*<p class="caption">[\s\S]*?<\/p>/g,
+    (block) => `<div class="keep-together">${block}</div>`,
+  );
+}
+
 function errorText(error: unknown): string {
   if (error !== null && typeof error === 'object') {
     const stderr = (error as { stderr?: unknown }).stderr;
@@ -273,7 +300,7 @@ export async function exportThesis(options: ThesisExportOptions): Promise<Thesis
       pandocArgs.push(...bibliographyArgs, '-o', bodyHtmlPath);
       await exec('pandoc', pandocArgs, { timeout: PANDOC_TIMEOUT, maxBuffer: PANDOC_BUFFER });
 
-      const bodyHtml = await fs.readFile(bodyHtmlPath, 'utf8');
+      const bodyHtml = markCaptionParagraphs(await fs.readFile(bodyHtmlPath, 'utf8'));
       const tocHtml = buildTocHtml(extractHeadings(bodyHtml));
 
       let abstractHtml: { heading: string; html: string } | null = null;

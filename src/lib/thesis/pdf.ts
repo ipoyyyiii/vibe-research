@@ -1,4 +1,5 @@
 import { addCaptionAnchors, captionLabel, type CaptionEntry } from './chapters';
+import { hasProgramPrefix } from './front-matter';
 import type { FrontMatter } from './types';
 
 const PLACEHOLDER = '…………………………';
@@ -127,7 +128,7 @@ function coverHtml(frontMatter: FrontMatter): string {
     '<p class="cover-line">Diajukan sebagai salah satu syarat untuk memperoleh gelar Sarjana</p>' +
     `<p class="cover-author">${valueOr(frontMatter.author)}</p>` +
     `<p class="cover-meta">NIM ${valueOr(frontMatter.nim)}</p>` +
-    `<p class="cover-meta">Program Studi ${valueOr(frontMatter.program)}</p>` +
+    `<p class="cover-meta">${hasProgramPrefix(frontMatter.program) ? '' : 'Program Studi '}${valueOr(frontMatter.program)}</p>` +
     `<p class="cover-meta">Fakultas ${facultyName(frontMatter.faculty)}</p>` +
     `<p class="cover-meta cover-institution">${valueOr(frontMatter.institution).toUpperCase()}</p>` +
     `<p class="cover-meta cover-place">${valueOr(frontMatter.city)}, ${valueOr(frontMatter.year)}</p>` +
@@ -143,7 +144,7 @@ function statementHtml(frontMatter: FrontMatter): string {
     '<p>Yang bertanda tangan di bawah ini:</p>' +
     `<p class="identity">Nama: ${valueOr(frontMatter.author)}</p>` +
     `<p class="identity">NIM: ${valueOr(frontMatter.nim)}</p>` +
-    `<p class="identity">Program Studi: ${valueOr(frontMatter.program)}</p>` +
+    `<p class="identity">${hasProgramPrefix(frontMatter.program) ? '' : 'Program Studi: '}${valueOr(frontMatter.program)}</p>` +
     `<p class="identity">Fakultas: ${facultyName(frontMatter.faculty)}</p>` +
     `<p class="statement-body">Menyatakan bahwa skripsi yang berjudul &quot;${title}&quot; ` +
     'adalah hasil karya saya sendiri, bukan plagiarisme, dan semua sumber yang dikutip telah ' +

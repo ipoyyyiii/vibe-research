@@ -48,16 +48,29 @@ function figureRank(
  * Sisipkan blok di akhir seksi sebuah heading (sebelum heading berikutnya
  * dengan level sama/lebih tinggi). Tanpa heading yang cocok → di akhir file.
  */
+/**
+ * Judul heading untuk pencocokan: buang penanda markdown DAN nomor bagian.
+ * Tanpa ini, heading "4.3 Uji Asumsi Klasik" tidak akan pernah cocok dengan
+ * judul pilihan pengguna sehingga tabel diam-diam jatuh ke akhir file.
+ */
+function normalizeHeading(value: string): string {
+  return value
+    .replace(/[*_`]/g, '')
+    .replace(/^\s*\d+(?:\.\d+)*[.)]?\s+/, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
 function insertAfterHeading(content: string, headingText: string, block: string): string {
   const lines = content.split('\n');
-  const wanted = headingText.trim().toLowerCase();
+  const wanted = normalizeHeading(headingText);
   let start = -1;
   let level = 0;
   for (let i = 0; i < lines.length; i += 1) {
     const match = /^(#{1,6})\s+(.*)$/.exec(lines[i]);
     if (!match) continue;
-    const text = match[2].replace(/[*_`]/g, '').replace(/^\d+[.)]\s*/, '').trim().toLowerCase();
-    if (text === wanted) {
+    if (normalizeHeading(match[2]) === wanted) {
       start = i;
       level = match[1].length;
       break;

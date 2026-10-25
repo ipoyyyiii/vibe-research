@@ -51,3 +51,19 @@ export async function writeFrontMatter(folder: string, input: unknown): Promise<
   await fs.writeFile(abs, `${JSON.stringify(frontMatter, null, 2)}\n`, 'utf8');
   return frontMatter;
 }
+
+/**
+ * Label program studi untuk sampul. User sering mengisi field dengan awalan
+ * "Program Studi ..." karena nama field-nya begitu, sehingga templat yang juga
+ * menambahkan awalan menghasilkan "Program Studi Program Studi ...".
+ */
+export function programLabel(value: string): string {
+  const trimmed = value.trim();
+  if (trimmed === '') return '';
+  return trimmed;
+}
+
+/** True bila nilai sudah memuat kata "program studi" di awal. */
+export function hasProgramPrefix(value: string): boolean {
+  return /^\s*program\s+studi\b/i.test(value);
+}

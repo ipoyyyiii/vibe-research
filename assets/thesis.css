@@ -107,6 +107,28 @@ table {
   width: 100%;
   margin: 6pt 0 12pt;
   page-break-inside: avoid;
+  break-inside: avoid;
+  /* Tabel tidak boleh pindah halaman tanpa captionnya. */
+  break-before: avoid;
+  page-break-before: avoid;
+}
+
+/* Caption + tabel/gambar dibungkus satu blok oleh lib/thesis/export.ts supaya
+   WeasyPrint tidak memisahkan caption ke kaki halaman. */
+.keep-together {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+p.caption {
+  break-after: avoid;
+  page-break-after: avoid;
+  margin-bottom: 2pt;
+}
+
+/* Kolom label jangan dipaksa sependek isi numeriknya. */
+table th:first-child {
+  min-width: 22%;
 }
 
 th,
