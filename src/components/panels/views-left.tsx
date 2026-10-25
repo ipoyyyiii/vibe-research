@@ -812,8 +812,7 @@ export function DataView({ slug, entries, onOpenFile }: ViewProps) {
         <button
           type="button"
           onClick={() => setRunOpen(true)}
-          disabled={!installedStats}
-          title={installedStats ? t('es.runHint') : t('es.runNeedsScript')}
+          title={t('es.runHint')}
           className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-[11px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Play size={12} />
@@ -849,7 +848,9 @@ export function DataView({ slug, entries, onOpenFile }: ViewProps) {
           <span className="text-[11px] text-muted-foreground">
             {t('es.statsInstalled', { path: installedStats.path })}
           </span>
-        ) : null}
+        ) : (
+          <span className="text-[11px] text-muted-foreground">{t('es.runNeedsScript')}</span>
+        )}
       </div>
       {results.length > 0 && (
         <div className="shrink-0 border-t border-border px-2 py-2">
