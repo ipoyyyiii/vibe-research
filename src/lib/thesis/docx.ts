@@ -414,9 +414,6 @@ export async function applyThesisLayout(
   const bodySect = extractBodySectPr(xml);
   if (!bodySect) throw new Error('DOCX tidak punya sectPr');
 
-  if (logo) {
-    xml = await insertCoverLogo(zip, xml, logo);
-  }
 
   const relsFile = zip.file('word/_rels/document.xml.rels');
   const rels = relsFile ? await relsFile.async('string') : '';
@@ -455,6 +452,12 @@ export async function applyThesisLayout(
   const markerFound = markerPattern.test(xml);
   if (markerFound) {
     xml = xml.replace(markerPattern, `<w:p><w:pPr>${frontSect}</w:pPr></w:p>`);
+  }
+
+  // Logo disisipkan PALING AKHIR: pergeseran indeks dari penyisipan di awal
+  // pernah membuat blok sectPr masuk ke tengah teks dan merusak XML.
+  if (logo) {
+    xml = await insertCoverLogo(zip, xml, logo);
   }
 
   zip.file('word/document.xml', xml);
