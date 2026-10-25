@@ -861,7 +861,13 @@
     "cslRemove": "Remove",
     "cslHint": "No .csl file yet. Download one from your campus citation style page or Zotero.",
     "cslFailed": "Could not use that CSL file. Make sure it is a valid .csl (with <style>, <citation>, and <bibliography>).",
-    "tocHint": "The table of contents in the DOCX is still a field. On open, Word asks \"This document contains fields that may refer to other files\" — choose Yes. If it does not appear: right-click the table of contents, then Update Field → Update entire table."
+    "tocHint": "The table of contents in the DOCX is still a field. On open, Word asks \"This document contains fields that may refer to other files\" — choose Yes. If it does not appear: right-click the table of contents, then Update Field → Update entire table.",
+    "logoTitle": "Cover logo",
+    "logoUpload": "Upload logo (PNG/JPG)",
+    "logoActive": "Logo active ({kb} KB)",
+    "logoRemove": "Remove",
+    "logoHint": "No logo yet. The cover will contain text only.",
+    "logoFailed": "Could not use that logo. Make sure it is a PNG or JPG under 2 MB."
   },
   "topbar": {
     "export": "Export",
@@ -906,7 +912,11 @@
     "openReport": "Open report",
     "exitFail": "The analysis stopped with code {code}. Check the log above for the failing line.",
     "fail": "Could not start the analysis. Check the server log and try again.",
-    "noData": "No data files yet. Upload a CSV/Excel file with the + button in the Data panel."
+    "noData": "No data files yet. Upload a CSV/Excel file with the + button in the Data panel.",
+    "depsMissing": "The Python dependencies (pandas, scipy, statsmodels) are not installed in this project yet. The analysis cannot run without them.",
+    "depsInstall": "Set up dependencies",
+    "depsInstalling": "Installing… (1–3 minutes)",
+    "depsFail": "Could not set up the dependencies. Check the log above; make sure python3 and an internet connection are available."
   },
   "sampleSize": {
     "title": "Sample size calculator",

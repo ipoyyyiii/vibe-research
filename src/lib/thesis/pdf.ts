@@ -120,9 +120,10 @@ export function buildListHtml(
   return `<nav class="list">${rows}</nav>`;
 }
 
-function coverHtml(frontMatter: FrontMatter): string {
+function coverHtml(frontMatter: FrontMatter, logoPath?: string | null): string {
   return (
     '<section class="page cover">' +
+    (logoPath ? `<p class="cover-logo"><img src="${escapeHtml(logoPath)}" alt="Logo institusi" /></p>` : '') +
     '<p class="cover-label">SKRIPSI</p>' +
     `<p class="cover-title">${valueOr(frontMatter.title, 'JUDUL SKRIPSI')}</p>` +
     '<p class="cover-line">Diajukan sebagai salah satu syarat untuk memperoleh gelar Sarjana</p>' +
@@ -186,6 +187,8 @@ export type FrontMatterHtmlInput = {
   figures: CaptionEntry[];
   bodyHtml: string;
   tocHtml: string;
+  /** Path relatif project ke logo sampul, mis. `.vibe-research/logo.png`. */
+  logoPath?: string | null;
 };
 
 export function buildFrontMatterHtml(input: FrontMatterHtmlInput): string {
@@ -196,7 +199,7 @@ export function buildFrontMatterHtml(input: FrontMatterHtmlInput): string {
     : '';
   return (
     '<div class="frontmatter">' +
-    coverHtml(input.frontMatter) +
+    coverHtml(input.frontMatter, input.logoPath) +
     statementHtml(input.frontMatter) +
     approvalHtml(input.frontMatter) +
     abstract +

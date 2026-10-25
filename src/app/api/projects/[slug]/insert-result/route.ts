@@ -53,6 +53,16 @@ function figureRank(
  * Tanpa ini, heading "4.3 Uji Asumsi Klasik" tidak akan pernah cocok dengan
  * judul pilihan pengguna sehingga tabel diam-diam jatuh ke akhir file.
  */
+/** Respons 400 saat heading tujuan tidak ada — sebutkan pilihan yang tersedia. */
+function headingNotFound(heading: string, chapterPath: string) {
+  return NextResponse.json(
+    {
+      error: `Heading "${heading}" tidak ditemukan di ${chapterPath}. Pilih heading yang ada; hasil tidak disisipkan ke mana pun.`,
+    },
+    { status: 400 },
+  );
+}
+
 function normalizeHeading(value: string): string {
   return value
     .replace(/[*_`]/g, '')
@@ -62,7 +72,11 @@ function normalizeHeading(value: string): string {
     .toLowerCase();
 }
 
-function insertAfterHeading(content: string, headingText: string, block: string): string {
+function insertAfterHeading(
+  content: string,
+  headingText: string,
+  block: string,
+): { content: string; matched: boolean } {
   const lines = content.split('\n');
   const wanted = normalizeHeading(headingText);
   let start = -1;
@@ -76,10 +90,10 @@ function insertAfterHeading(content: string, headingText: string, block: string)
       break;
     }
   }
-  if (start < 0) {
-    const separator = content.endsWith('\n') ? '\n' : '\n\n';
-    return `${content}${separator}${block}`;
-  }
+  // Heading yang diminta tidak ada: JANGAN menempelkan ke akhir file diam-diam.
+  // Untuk naskah skripsi, hasil yang masuk ke tempat salah lebih berbahaya
+  // daripada pesan error.
+  if (start < 0) return { content, matched: false };
   let end = lines.length;
   for (let i = start + 1; i < lines.length; i += 1) {
     const match = /^(#{1,6})\s+/.exec(lines[i]);
@@ -90,7 +104,10 @@ function insertAfterHeading(content: string, headingText: string, block: string)
   }
   const head = lines.slice(0, end).join('\n').replace(/\s+$/, '');
   const tail = lines.slice(end).join('\n');
-  return tail.trim() ? `${head}\n\n${block}\n${tail}` : `${head}\n\n${block}`;
+  return {
+    content: tail.trim() ? `${head}\n\n${block}\n${tail}` : `${head}\n\n${block}`,
+    matched: true,
+  };
 }
 
 /**
@@ -185,10 +202,14 @@ export async function POST(
         const label = caption?.trim() || figure.caption || figure.alt || number;
         const block = `![${figure.alt || label}](${figure.path})\n\n**${number}** ${label}\n`;
 
-        const next =
-          position === 'afterHeading' && heading
-            ? insertAfterHeading(chapter.content, heading, block)
-            : `${chapter.content}${chapter.content.endsWith('\n') ? '' : '\n'}${chapter.content.endsWith('\n') ? '\n' : '\n\n'}${block}`;
+        let next: string;
+        if (position === 'afterHeading' && heading) {
+          const placed = insertAfterHeading(chapter.content, heading, block);
+          if (!placed.matched) return headingNotFound(heading, chapterPath);
+          next = placed.content;
+        } else {
+          next = `${chapter.content}${chapter.content.endsWith('\n') ? '' : '\n'}${chapter.content.endsWith('\n') ? '\n' : '\n\n'}${block}`;
+        }
         await snapshotCurrent(folder, chapterPath, 'analysis').catch(() => undefined);
         await writeTextFile(folder, chapterPath, next);
 
@@ -215,10 +236,14 @@ export async function POST(
       const label = caption?.trim() || table.caption || number;
       const block = `**${number}** ${label}\n\n${table.markdown}\n`;
 
-      const next =
-        position === 'afterHeading' && heading
-          ? insertAfterHeading(chapter.content, heading, block)
-          : `${chapter.content}${chapter.content.endsWith('\n') ? '' : '\n'}${chapter.content.endsWith('\n') ? '\n' : '\n\n'}${block}`;
+      let next: string;
+      if (position === 'afterHeading' && heading) {
+        const placed = insertAfterHeading(chapter.content, heading, block);
+        if (!placed.matched) return headingNotFound(heading, chapterPath);
+        next = placed.content;
+      } else {
+        next = `${chapter.content}${chapter.content.endsWith('\n') ? '' : '\n'}${chapter.content.endsWith('\n') ? '\n' : '\n\n'}${block}`;
+      }
       // Simpan versi bab yang SEBELUM tabel disisipin, biar bisa dibalik.
       await snapshotCurrent(folder, chapterPath, 'analysis').catch(() => undefined);
       await writeTextFile(folder, chapterPath, next);

@@ -6,6 +6,7 @@ import { checkCitations } from '../citations/check';
 import { injectDocxSources } from '../citations/docx-sources';
 import { isRealInside, resolveInside, toProjectPath } from '../export/paths';
 import { parseBib, type BibEntry } from '../journals/bib';
+import { readCoverLogo } from './cover-logo';
 import {
   ABSTRACT_PATH,
   discoverChapterPaths,
@@ -210,6 +211,9 @@ export async function exportThesis(options: ThesisExportOptions): Promise<Thesis
   let docxError: string | undefined;
   let pdfError: string | undefined;
 
+  // Logo sampul dibaca sekali; DOCX dan PDF memakai berkas yang sama.
+  const logo = await readCoverLogo(folder);
+
   const csl =
     options.style === 'custom' ? path.join(folder, CUSTOM_CSL) : path.join(appRoot, STYLE_CSL[options.style]);
   if (options.style === 'custom') {
@@ -256,7 +260,7 @@ export async function exportThesis(options: ThesisExportOptions): Promise<Thesis
       await exec('pandoc', args, { timeout: PANDOC_TIMEOUT, maxBuffer: PANDOC_BUFFER });
 
       const original = await fs.readFile(outAbs);
-      const layout = await applyThesisLayout(original);
+      const layout = await applyThesisLayout(original, undefined, logo ? { buffer: logo.buffer, ext: logo.ext! } : null);
       if (!layout.markerFound) {
         console.warn('[lib/thesis/export] marker section tidak ditemukan di DOCX');
       }
@@ -322,6 +326,7 @@ export async function exportThesis(options: ThesisExportOptions): Promise<Thesis
         figures,
         bodyHtml,
         tocHtml,
+        logoPath: logo ? logo.path : null,
       });
       const fullHtml = buildThesisHtml({
         title: options.frontMatter.title,

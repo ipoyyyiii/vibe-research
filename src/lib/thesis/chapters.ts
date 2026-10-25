@@ -7,7 +7,10 @@ export { mergeChapterHeading };
 
 export const ABSTRACT_PATH = 'dokumen/abstrak.md';
 const MAX_CHAPTER_BYTES = 4 * 1024 * 1024;
-const EXCLUDED_NAME_WORDS = new Set(['uji', 'test', 'percobaan', 'draft']);
+// 'instrumen' ditambahkan karena tombol "Buat instrumen" menulis
+// dokumen/instrumen-penelitian.md — kuesioner bukan bab skripsi, jadi jangan
+// ikut terekspor sebagai bab.
+const EXCLUDED_NAME_WORDS = new Set(['uji', 'test', 'percobaan', 'draft', 'instrumen']);
 
 export type CaptionEntry = {
   kind: 'table' | 'figure';

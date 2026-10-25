@@ -32,12 +32,32 @@ export function AnalysisRunModal({ slug, files, onOpenFile, onClose, onFinished 
   const [log, setLog] = useState('');
   const [outcome, setOutcome] = useState<{ exit: number; out: string; seconds: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [depsReady, setDepsReady] = useState<boolean | null>(null);
+  const [depsBusy, setDepsBusy] = useState(false);
   const logRef = useRef<HTMLPreElement | null>(null);
 
   const itemColumns = useMemo(
     () => (columns?.columns ?? []).filter((name) => /^P\d+$/i.test(name)),
     [columns],
   );
+
+  // Dependensi Python diperiksa sekali saat dialog dibuka, supaya user tahu
+  // sebelum menunggu analisis yang pasti gagal.
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const res = await fetch(`/api/projects/${encodeURIComponent(slug)}/analysis/setup`);
+        const data = (await res.json().catch(() => null)) as { ready?: boolean } | null;
+        if (alive) setDepsReady(Boolean(data?.ready));
+      } catch {
+        if (alive) setDepsReady(null);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [slug]);
 
   // Kolom dibaca dari file yang dipilih; pemilihan file lain mengulang probe.
   useEffect(() => {
@@ -154,6 +174,48 @@ export function AnalysisRunModal({ slug, files, onOpenFile, onClose, onFinished 
     onClose();
   };
 
+  /** Pasang pandas/scipy/statsmodels ke `.venv` project, streaming ke log. */
+  const installDeps = async () => {
+    setDepsBusy(true);
+    setError(null);
+    setLog('');
+    try {
+      const res = await fetch(`/api/projects/${encodeURIComponent(slug)}/analysis/setup`, {
+        method: 'POST',
+      });
+      if (!res.ok || !res.body) {
+        setError(t('analysisRun.depsFail'));
+        return;
+      }
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const marker = buffer.indexOf('__DONE__');
+        if (marker >= 0) {
+          setLog(buffer.slice(0, marker));
+          try {
+            const parsed = JSON.parse(buffer.slice(marker + 8).trim()) as { exit: number; ready: boolean };
+            setDepsReady(parsed.ready);
+            if (!parsed.ready) setError(t('analysisRun.depsFail'));
+          } catch {
+            setError(t('analysisRun.depsFail'));
+          }
+          buffer = '';
+          break;
+        }
+        setLog(buffer);
+      }
+    } catch {
+      setError(t('analysisRun.depsFail'));
+    } finally {
+      setDepsBusy(false);
+    }
+  };
+
   const numericOptions = columns?.numeric ?? [];
   const allOptions = columns?.columns ?? [];
 
@@ -188,6 +250,21 @@ export function AnalysisRunModal({ slug, files, onOpenFile, onClose, onFinished 
               : columnsError ?? t('analysisRun.columnsLoading')}
           </p>
         </div>
+
+        {depsReady === false && (
+          <div className="space-y-1 rounded-md border border-amber-300 bg-amber-50 p-2 text-[11px] text-amber-900">
+            <p>{t('analysisRun.depsMissing')}</p>
+            <Button
+              variant="outline"
+              className="h-6 px-2 text-[11px]"
+              disabled={depsBusy}
+              onClick={() => void installDeps()}
+            >
+              {depsBusy ? <Loader2 size={11} className="mr-1 animate-spin" /> : null}
+              {depsBusy ? t('analysisRun.depsInstalling') : t('analysisRun.depsInstall')}
+            </Button>
+          </div>
+        )}
 
         <div className="space-y-1">
           <span className="font-medium">{t('analysisRun.preset')}</span>

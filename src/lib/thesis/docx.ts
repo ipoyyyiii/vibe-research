@@ -2,6 +2,7 @@ import JSZip from 'jszip';
 import { captionLabel, type CaptionEntry } from './chapters';
 import { hasProgramPrefix } from './front-matter';
 import type { FrontMatter } from './types';
+import { imageSize } from './cover-logo';
 
 export const DOCX_BODY_MARKER = '@@THESIS-BODY-START@@';
 
@@ -398,9 +399,12 @@ export type DocxLayoutResult = {
  * - section isi: `w:pgNumType w:fmt="decimal" w:start="1"`
  * - footer berisi field PAGE dipakai kedua section.
  */
+export type CoverLogoInput = { buffer: Buffer; ext: 'png' | 'jpg' };
+
 export async function applyThesisLayout(
   docx: Buffer,
   marker = DOCX_BODY_MARKER,
+  logo?: CoverLogoInput | null,
 ): Promise<DocxLayoutResult> {
   const zip = await JSZip.loadAsync(docx);
   const documentFile = zip.file('word/document.xml');
@@ -409,6 +413,10 @@ export async function applyThesisLayout(
 
   const bodySect = extractBodySectPr(xml);
   if (!bodySect) throw new Error('DOCX tidak punya sectPr');
+
+  if (logo) {
+    xml = await insertCoverLogo(zip, xml, logo);
+  }
 
   const relsFile = zip.file('word/_rels/document.xml.rels');
   const rels = relsFile ? await relsFile.async('string') : '';
@@ -468,4 +476,73 @@ export async function applyThesisLayout(
     compressionOptions: { level: 6 },
   });
   return { bytes, markerFound };
+}
+
+const EMU_PER_CM = 360_000;
+const LOGO_HEIGHT_EMU = Math.round(2.5 * EMU_PER_CM);
+const LOGO_MAX_WIDTH_EMU = Math.round(8 * EMU_PER_CM);
+
+/**
+ * Sisipkan logo di paling atas sampul DOCX.
+ *
+ * Word tidak bisa menampilkan gambar tanpa entri media + relasi, jadi ketiganya
+ * ditulis sekaligus: berkas di `word/media`, relasi di `document.xml.rels`, dan
+ * elemen drawing di awal `<w:body>`.
+ */
+async function insertCoverLogo(
+  zip: JSZip,
+  xml: string,
+  logo: CoverLogoInput,
+): Promise<string> {
+  const size = imageSize(logo.buffer) ?? { width: 600, height: 600 };
+  const ratio = size.width > 0 && size.height > 0 ? size.width / size.height : 1;
+  const cy = LOGO_HEIGHT_EMU;
+  const cx = Math.min(LOGO_MAX_WIDTH_EMU, Math.round(cy * ratio));
+
+  const mediaName = `cover-logo.${logo.ext === 'jpg' ? 'jpeg' : 'png'}`;
+  zip.file(`word/media/${mediaName}`, logo.buffer);
+
+  const relsPath = 'word/_rels/document.xml.rels';
+  const relsFile = zip.file(relsPath);
+  const rels = relsFile ? await relsFile.async('string') : '';
+  let relId = 'rIdCoverLogo1';
+  for (let index = 1; index <= 999; index += 1) {
+    relId = `rIdCoverLogo${index}`;
+    if (!rels.includes(`Id="${relId}"`)) break;
+  }
+  const rel = `<Relationship Id="${relId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/${mediaName}"/>`;
+  const relsNext = rels.includes('</Relationships>')
+    ? rels.replace('</Relationships>', `${rel}</Relationships>`)
+    : `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${rel}</Relationships>`;
+  zip.file(relsPath, relsNext);
+
+  const contentType = logo.ext === 'jpg' ? 'image/jpeg' : 'image/png';
+  const ctFile = zip.file('[Content_Types].xml');
+  if (ctFile) {
+    const ct = await ctFile.async('string');
+    const ext = logo.ext === 'jpg' ? 'jpg' : 'png';
+    if (!ct.includes(`Extension="${ext}"`)) {
+      zip.file(
+        '[Content_Types].xml',
+        ct.replace('</Types>', `<Default Extension="${ext}" ContentType="${contentType}"/></Types>`),
+      );
+    }
+  }
+
+  const drawing =
+    '<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="0" w:after="0"/></w:pPr><w:r><w:drawing>' +
+    '<wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"' +
+    ` distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/>` +
+    `<wp:docPr id="900" name="Logo Sampul"/><wp:cNvGraphicFramePr/>` +
+    '<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">' +
+    '<a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">' +
+    '<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">' +
+    `<pic:nvPicPr><pic:cNvPr id="900" name="${mediaName}"/><pic:cNvPicPr/></pic:nvPicPr>` +
+    `<pic:blipFill><a:blip r:embed="${relId}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>` +
+    `<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm>` +
+    '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic>' +
+    '</wp:inline></w:drawing></w:r></w:p>';
+
+  // Setelah <w:body>, sebelum paragraf pertama (sampul).
+  return xml.replace(/(<w:body>)/, `$1${drawing}`);
 }

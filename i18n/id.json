@@ -861,7 +861,13 @@
     "cslRemove": "Hapus",
     "cslHint": "Belum ada file .csl. Unduh dari situs gaya sitasi kampus atau Zotero.",
     "cslFailed": "File CSL gagal dipakai. Pastikan file .csl yang sah (punya <style>, <citation>, dan <bibliography>).",
-    "tocHint": "Daftar Isi di DOCX masih berupa field. Saat dibuka, Word menanyakan \"This document contains fields that may refer to other files\" — pilih Yes. Kalau tidak muncul: klik kanan di Daftar Isi, lalu Update Field → Update entire table."
+    "tocHint": "Daftar Isi di DOCX masih berupa field. Saat dibuka, Word menanyakan \"This document contains fields that may refer to other files\" — pilih Yes. Kalau tidak muncul: klik kanan di Daftar Isi, lalu Update Field → Update entire table.",
+    "logoTitle": "Logo sampul",
+    "logoUpload": "Unggah logo (PNG/JPG)",
+    "logoActive": "Logo aktif ({kb} KB)",
+    "logoRemove": "Hapus",
+    "logoHint": "Belum ada logo. Sampul akan berisi teks saja.",
+    "logoFailed": "Logo gagal dipakai. Pastikan PNG atau JPG dan ukurannya di bawah 2 MB."
   },
   "topbar": {
     "export": "Export",
@@ -906,7 +912,11 @@
     "openReport": "Buka laporan",
     "exitFail": "Analisis berhenti dengan kode {code}. Lihat log di atas untuk baris yang error.",
     "fail": "Analisis gagal dijalankan. Cek log server, lalu coba lagi.",
-    "noData": "Belum ada file data. Unggah CSV/Excel dulu lewat tombol + di panel Data."
+    "noData": "Belum ada file data. Unggah CSV/Excel dulu lewat tombol + di panel Data.",
+    "depsMissing": "Dependensi Python (pandas, scipy, statsmodels) belum terpasang di project ini. Tanpa itu analisis tidak bisa jalan.",
+    "depsInstall": "Siapkan dependensi",
+    "depsInstalling": "Memasang… (1–3 menit)",
+    "depsFail": "Gagal menyiapkan dependensi. Lihat log di atas; pastikan python3 dan koneksi internet tersedia."
   },
   "sampleSize": {
     "title": "Kalkulator ukuran sampel",

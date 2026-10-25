@@ -102,6 +102,16 @@ li {
   margin: 0 0 3pt;
 }
 
+.cover-logo {
+  text-align: center;
+  margin: 0 0 14pt;
+}
+
+.cover-logo img {
+  height: 2.5cm;
+  width: auto;
+}
+
 table {
   border-collapse: collapse;
   width: 100%;

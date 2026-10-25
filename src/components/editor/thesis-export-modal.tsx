@@ -98,6 +98,9 @@ export function ThesisExportModal({
   const [result, setResult] = useState<ExportResponse | null>(null);
   const [csl, setCsl] = useState<{ exists: boolean; title: string | null; bytes: number } | null>(null);
   const [cslBusy, setCslBusy] = useState(false);
+  const [logo, setLogo] = useState<{ exists: boolean; path: string | null; bytes: number } | null>(null);
+  const [logoBusy, setLogoBusy] = useState(false);
+  const [logoError, setLogoError] = useState<string | null>(null);
   const [cslError, setCslError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -136,6 +139,11 @@ export function ThesisExportModal({
           | { csl?: { exists: boolean; title: string | null; bytes: number } }
           | null;
         if (!cancelled) setCsl(cslData?.csl ?? null);
+        const logoRes = await fetch(`/api/projects/${encodeURIComponent(slug)}/cover-logo`);
+        const logoData = (await logoRes.json().catch(() => null)) as
+          | { logo?: { exists: boolean; path: string | null; bytes: number } }
+          | null;
+        if (!cancelled) setLogo(logoData?.logo ?? null);
       } catch {
         if (!cancelled) setLoadError(t('err.server'));
       } finally {
@@ -266,6 +274,48 @@ export function ThesisExportModal({
       if (style === 'custom') setStyle('apa');
     } finally {
       setCslBusy(false);
+    }
+  };
+
+  const uploadLogo = async (file: File | null) => {
+    if (!file) return;
+    setLogoBusy(true);
+    setLogoError(null);
+    try {
+      const buffer = await file.arrayBuffer();
+      const data = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+      const res = await fetch(`/api/projects/${encodeURIComponent(slug)}/cover-logo`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data }),
+      });
+      const json = (await res.json().catch(() => null)) as
+        | { logo?: { exists: boolean; path: string | null; bytes: number }; error?: string }
+        | null;
+      if (!res.ok || !json?.logo) {
+        setLogoError(json?.error ?? t('thesisExport.logoFailed'));
+        return;
+      }
+      setLogo(json.logo);
+    } catch {
+      setLogoError(t('thesisExport.logoFailed'));
+    } finally {
+      setLogoBusy(false);
+    }
+  };
+
+  const removeLogo = async () => {
+    setLogoBusy(true);
+    setLogoError(null);
+    try {
+      const res = await fetch(`/api/projects/${encodeURIComponent(slug)}/cover-logo`, { method: 'DELETE' });
+      if (!res.ok) {
+        setLogoError(t('thesisExport.logoFailed'));
+        return;
+      }
+      setLogo({ exists: false, path: null, bytes: 0 });
+    } finally {
+      setLogoBusy(false);
     }
   };
 
@@ -460,6 +510,40 @@ export function ThesisExportModal({
                   )}
                 </div>
                 {cslError && <p className="text-[11px] text-red-600">{cslError}</p>}
+              </div>
+              <div className="space-y-1">
+                <span className="block text-[11px] text-muted-foreground">
+                  {t('thesisExport.logoTitle')}
+                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  <label className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] transition-colors hover:bg-muted">
+                    {logoBusy ? <Loader2 size={11} className="animate-spin" /> : <Upload size={11} />}
+                    {t('thesisExport.logoUpload')}
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg"
+                      className="hidden"
+                      onChange={(event) => void uploadLogo(event.target.files?.[0] ?? null)}
+                    />
+                  </label>
+                  {logo?.exists ? (
+                    <>
+                      <span className="min-w-0 flex-1 truncate text-[11px] text-muted-foreground">
+                        {t('thesisExport.logoActive', { kb: (logo.bytes / 1024).toFixed(1) })}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => void removeLogo()}
+                        className="text-[11px] text-red-600 underline underline-offset-2"
+                      >
+                        {t('thesisExport.logoRemove')}
+                      </button>
+                    </>
+                  ) : (
+                    <span className="text-[11px] text-muted-foreground">{t('thesisExport.logoHint')}</span>
+                  )}
+                </div>
+                {logoError && <p className="text-[11px] text-red-600">{logoError}</p>}
               </div>
             </section>
 
