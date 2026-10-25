@@ -55,6 +55,11 @@ function capabilitiesBlock(caps: AgentCapabilities): string[] {
       '  - Semantic Scholar: `https://api.semanticscholar.org/graph/v1/paper/search?fields=title,authors,year,externalIds,citationCount,abstract&query=<kata-kunci>`',
       '  - WAJIB sebut: judul, penulis, tahun, DOI, jumlah sitasi. JANGAN mengarang metadata; kalau data gak ada, bilang gak ada.',
       '  - Kalau ada abstrak, BACA dulu baru rekomendasiin (jangan asal judul).',
+      '  - Untuk SETIAP paper yang direkomendasikan, sertakan satu blok berpagar supaya UI bisa menampilkan kartu (buka PDF + drag ke file manager):',
+      '    ```vibe-journal',
+      '    {"doi":"10.xxxx/xxxx","title":"Judul paper","authors":["Nama 1","Nama 2"],"year":2024,"venue":"Nama jurnal","openAccessUrl":"https://...pdf"}',
+      '    ```',
+      '    Blok ini hanya untuk UI — JANGAN menyalinnya ke file bab.',
     );
   } else {
     lines.push(

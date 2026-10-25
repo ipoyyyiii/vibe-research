@@ -145,6 +145,40 @@ export function LeftPanel({
 }) {
   const t = useT();
   const { entries, loading, error } = useFileTree(slug, treeVersion);
+  const [paperDrop, setPaperDrop] = useState(false);
+
+  // Kartu jurnal dari chat bisa di-drag ke panel ini: yang dikirim bukan berkas
+  // OS, melainkan metadata paper. PDF-nya diunduh server ke referensi/papers/.
+  const isPaperDrag = (event: React.DragEvent) =>
+    Array.from(event.dataTransfer.types ?? []).includes('application/x-vibe-paper');
+
+  const onPaperDragOver = (event: React.DragEvent) => {
+    if (!isPaperDrag(event)) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'copy';
+    setPaperDrop(true);
+  };
+
+  const onPaperDrop = (event: React.DragEvent) => {
+    if (!isPaperDrag(event)) return;
+    event.preventDefault();
+    setPaperDrop(false);
+    const raw = event.dataTransfer.getData('application/x-vibe-paper');
+    if (!raw) return;
+    let doi = '';
+    try {
+      const parsed = JSON.parse(raw) as { doi?: unknown };
+      if (typeof parsed.doi === 'string') doi = parsed.doi;
+    } catch {
+      return;
+    }
+    if (!doi) return;
+    void fetch(
+      `/api/journals/pdf?doi=${encodeURIComponent(doi)}&slug=${encodeURIComponent(slug)}`,
+    ).then((res) => {
+      if (res.ok) window.dispatchEvent(new CustomEvent('workspace:tree-refresh'));
+    });
+  };
 
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set(['dokumen', 'referensi']));
   const [journalMode, setJournalMode] = useState<'search' | 'saved'>('search');
@@ -586,7 +620,12 @@ export function LeftPanel({
   );
 
   return (
-    <aside className="flex h-full">
+    <aside
+      className={`flex h-full ${paperDrop ? 'ring-2 ring-inset ring-primary/40' : ''}`}
+      onDragOver={onPaperDragOver}
+      onDragLeave={() => setPaperDrop(false)}
+      onDrop={onPaperDrop}
+    >
       {activeTab === 'drafts' &&
         viewPane(
           t('views.drafts'),

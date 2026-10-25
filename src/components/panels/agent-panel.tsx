@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useT } from '@/lib/preferences';
 import ReactMarkdown from 'react-markdown';
+import { JournalCard, parseJournalCard } from '@/components/panels/journal-card';
 import remarkGfm from 'remark-gfm';
 import { Button, Modal, SegmentedGroup, StatusDot } from '@/components/ui';
 import {
@@ -218,15 +219,30 @@ function ToolRow({ event }: { event: ChatToolEvent }) {
 }
 
 /** Respons AI gaya-Claude: full-width, tanpa gelembung, markdown rapi. */
-function AssistantText({ text }: { text: string }) {
+function AssistantText({ text, slug }: { text: string; slug: string }) {
   return (
     <div className="w-full max-w-[92%] text-[13px] leading-relaxed text-card-foreground [&_a]:break-all [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-2 [&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-2 [&_blockquote]:text-muted-foreground [&_code]:rounded [&_code]:border [&_code]:border-border [&_code]:bg-muted [&_code]:px-1 [&_h1]:mt-2 [&_h1]:text-sm [&_h1]:font-semibold [&_h2]:mt-2 [&_h2]:text-[13px] [&_h2]:font-semibold [&_h3]:text-[13px] [&_h3]:font-medium [&_li]:my-0.5 [&_ol]:my-1 [&_ol]:list-decimal [&_ol]:pl-4 [&_p]:my-1 [&_pre]:my-1 [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:border [&_pre]:border-border [&_pre]:bg-muted [&_pre]:p-3 [&_pre_code]:rounded-none [&_pre_code]:border-0 [&_pre_code]:bg-transparent [&_pre_code]:px-0 [&_strong]:font-semibold [&_table]:my-1 [&_table]:text-[11px] [&_td]:border [&_td]:border-border [&_td]:px-1.5 [&_td]:py-0.5 [&_th]:border [&_th]:border-border [&_th]:bg-muted [&_th]:px-1.5 [&_th]:py-0.5 [&_th]:font-medium [&_ul]:my-1 [&_ul]:list-disc [&_ul]:pl-4">
-      <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          // Blok ```vibe-journal berisi metadata paper → kartu yang bisa dibuka
+          // PDF-nya dan di-drag ke file manager.
+          code({ className, children }) {
+            if (className === 'language-vibe-journal') {
+              const data = parseJournalCard(String(children));
+              return data ? <JournalCard slug={slug} data={data} /> : <code>{children}</code>;
+            }
+            return <code className={className}>{children}</code>;
+          },
+        }}
+      >
+        {text}
+      </ReactMarkdown>
     </div>
   );
 }
 
-function MessageBubble({ message }: { message: ChatMessage }) {
+function MessageBubble({ message, slug }: { message: ChatMessage; slug: string }) {
   if (message.role === 'system') {
     return (
       <div className="px-4 text-center text-[11px] text-muted-foreground">{message.text}</div>
@@ -247,7 +263,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
   }
   return (
     <div className="flex flex-col items-start gap-1">
-      {message.text ? <AssistantText text={message.text} /> : null}
+      {message.text ? <AssistantText text={message.text} slug={slug} /> : null}
       {!isUser && (message.toolEvents?.length ?? 0) > 0 && (
         <details className="w-full">
           <summary className="cursor-pointer select-none py-0.5 text-[10px] text-muted-foreground transition-colors hover:text-foreground">
@@ -685,7 +701,9 @@ export function AgentPanel({
               <p className="px-2 py-4 text-center text-xs text-muted-foreground">{t('ai.empty')}</p>
             ) : (
               <div className="space-y-2.5">
-                {messages.map((message) => <MessageBubble key={message.id} message={message} />)}
+                {messages.map((message) => (
+                  <MessageBubble key={message.id} message={message} slug={slug} />
+                ))}
                 {busy && (
                   <div className="flex justify-start" role="status" aria-label={t('ai.typing')}>
                     <div className="flex items-center gap-1.5 rounded-2xl rounded-bl-sm bg-muted px-3 py-2 text-muted-foreground">

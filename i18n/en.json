@@ -997,5 +997,13 @@
     "source": "Source",
     "open": "Open",
     "fail": "Could not run the comparison. Try again."
+  },
+  "card": {
+    "open": "Open PDF",
+    "opening": "Opening…",
+    "source": "Source",
+    "dragHint": "Drag into the left panel to save the PDF",
+    "noDoi": "This paper has no DOI, so the PDF cannot be fetched automatically.",
+    "noPdf": "No open-access PDF found for this paper."
   }
 }

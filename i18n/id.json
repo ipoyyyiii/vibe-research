@@ -997,5 +997,13 @@
     "source": "Sumber",
     "open": "Buka",
     "fail": "Gagal membandingkan. Coba lagi."
+  },
+  "card": {
+    "open": "Buka PDF",
+    "opening": "Membuka…",
+    "source": "Sumber",
+    "dragHint": "Bisa di-drag ke panel kiri untuk menyimpan PDF-nya",
+    "noDoi": "Paper ini tidak punya DOI, jadi PDF-nya tidak bisa diambil otomatis.",
+    "noPdf": "PDF open-access tidak ditemukan untuk paper ini."
   }
 }
