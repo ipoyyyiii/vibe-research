@@ -253,7 +253,8 @@
     "sources": "Active sources",
     "abstract": "Abstract",
     "search": "Search",
-    "header": "Journal Search"
+    "header": "Journal Search",
+    "pdfChip": "{n} reference PDFs"
   },
   "library": {
     "title": "Saved journals",
@@ -375,7 +376,7 @@
   },
   "word": {
     "title": "Word",
-    "loading": "Loading…",
+    "loading": "Loading the Word engine (~42 MB, once per session)…",
     "openBtn": "Open in Word",
     "thrown": "File thrown into Word — check the pane. Not showing? click again or drag it in manually.",
     "openFailed": "Auto-open failed — drag the chapter file into the Word pane, or click this button again.",
@@ -701,7 +702,8 @@
     "lastOpened": "Last opened",
     "neverOpened": "Never opened",
     "ready": "Ready",
-    "creating": "Setting up project…"
+    "creating": "Setting up project…",
+    "readyHint": "The application server is responding and ready."
   },
   "question": {
     "title": "Agent asks",
@@ -867,7 +869,8 @@
     "logoActive": "Logo active ({kb} KB)",
     "logoRemove": "Remove",
     "logoHint": "No logo yet. The cover will contain text only.",
-    "logoFailed": "Could not use that logo. Make sure it is a PNG or JPG under 2 MB."
+    "logoFailed": "Could not use that logo. Make sure it is a PNG or JPG under 2 MB.",
+    "exportingSeconds": "Exporting… {n}s (usually 15–30 seconds for DOCX+PDF)."
   },
   "topbar": {
     "export": "Export",

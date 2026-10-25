@@ -182,7 +182,10 @@ export function HomePage() {
             </span>
             <span className="text-[15px] font-semibold tracking-tight">{t('brand.name')}</span>
           </div>
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <div
+            className="flex items-center gap-1.5 text-xs text-muted-foreground"
+            title={t('home.readyHint')}
+          >
             <span aria-hidden="true" className="size-2 rounded-full bg-accent" />
             {t('home.ready')}
           </div>

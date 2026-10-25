@@ -253,7 +253,8 @@
     "sources": "Sumber aktif",
     "abstract": "abstrak",
     "search": "Cari",
-    "header": "Pencarian Jurnal"
+    "header": "Pencarian Jurnal",
+    "pdfChip": "{n} PDF referensi"
   },
   "library": {
     "title": "Jurnal tersimpan",
@@ -375,7 +376,7 @@
   },
   "word": {
     "title": "Word",
-    "loading": "Memuat…",
+    "loading": "Memuat mesin Word (~42 MB, sekali per sesi)…",
     "openBtn": "Buka di Word",
     "thrown": "File dilempar ke Word — cek jendelanya. Gak kebuka? klik lagi atau drag manual dari panel kiri.",
     "openFailed": "Gagal buka otomatis — drag file bab ke jendela Word, atau klik tombol ini lagi.",
@@ -701,7 +702,8 @@
     "lastOpened": "Dibuka terakhir",
     "neverOpened": "Belum pernah dibuka",
     "ready": "Siap",
-    "creating": "Menyiaping project…"
+    "creating": "Menyiaping project…",
+    "readyHint": "Server aplikasi merespons dan siap dipakai."
   },
   "question": {
     "title": "Agent nanya",
@@ -867,7 +869,8 @@
     "logoActive": "Logo aktif ({kb} KB)",
     "logoRemove": "Hapus",
     "logoHint": "Belum ada logo. Sampul akan berisi teks saja.",
-    "logoFailed": "Logo gagal dipakai. Pastikan PNG atau JPG dan ukurannya di bawah 2 MB."
+    "logoFailed": "Logo gagal dipakai. Pastikan PNG atau JPG dan ukurannya di bawah 2 MB.",
+    "exportingSeconds": "Mengekspor… {n} detik (biasanya 15–30 detik untuk DOCX+PDF)."
   },
   "topbar": {
     "export": "Export",

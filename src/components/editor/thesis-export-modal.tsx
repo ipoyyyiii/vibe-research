@@ -93,6 +93,7 @@ export function ThesisExportModal({
   const [style, setStyle] = useState<ExportStyle>('apa');
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [busy, setBusy] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [errorDetail, setErrorDetail] = useState<string | null>(null);
   const [result, setResult] = useState<ExportResponse | null>(null);
@@ -326,6 +327,18 @@ export function ThesisExportModal({
   const rawUrl = (path: string) =>
     `/api/projects/${encodeURIComponent(slug)}/raw?path=${encodeURIComponent(path)}`;
 
+  // Ekspor berjalan satu permintaan (tanpa streaming tahap), jadi yang bisa
+  // ditampilkan dengan jujur adalah waktu berjalan + ekspektasi durasi.
+  useEffect(() => {
+    if (!busy) {
+      setElapsed(0);
+      return undefined;
+    }
+    const started = Date.now();
+    const timer = window.setInterval(() => setElapsed(Math.round((Date.now() - started) / 1000)), 1000);
+    return () => window.clearInterval(timer);
+  }, [busy]);
+
   const missingCitations = result?.warnings?.missingCitations ?? [];
   const unusedEntries = result?.warnings?.unusedEntries ?? 0;
   const selectedCount = chapters.filter((chapter) => chapter.selected).length;
@@ -550,7 +563,7 @@ export function ThesisExportModal({
             {busy && (
               <p className="flex items-center gap-2 text-muted-foreground">
                 <Loader2 size={13} className="animate-spin" />
-                {t('thesisExport.exporting')}
+                {t('thesisExport.exportingSeconds', { n: String(elapsed) })}
               </p>
             )}
             {error && (

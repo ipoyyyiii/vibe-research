@@ -648,7 +648,7 @@ export function LeftPanel({
 
       {activeTab === 'journals' && (
         <div className="flex min-w-0 flex-1 flex-col bg-background text-foreground">
-          {tabHeader(t('journal.header'), `${pdfFiles.length} PDF`)}          <div className="flex shrink-0 gap-1 border-b border-border bg-card px-2 pb-1.5">
+          {tabHeader(t('journal.header'), t('journal.pdfChip', { n: String(pdfFiles.length) }))}          <div className="flex shrink-0 gap-1 border-b border-border bg-card px-2 pb-1.5">
             <button
               type="button"
               onClick={() => setJournalMode('search')}
