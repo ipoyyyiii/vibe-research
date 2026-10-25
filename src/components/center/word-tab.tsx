@@ -720,7 +720,8 @@ export function WordTab({
       const res = await fetch(`/api/projects/${encodeURIComponent(slug)}/file`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ path, content }),
+        // reason → isi bab di disk di-snapshot dulu, jadi edit Word bisa dibatalkan.
+        body: JSON.stringify({ path, content, reason: 'word' }),
       });
       if (res.ok) {
         inWordRef.current = content;

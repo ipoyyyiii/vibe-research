@@ -9,8 +9,9 @@ export const SNAPSHOT_DIR = '.riwayat';
  * - restore  : isi bab sebelum versi lama dipulihkan
  * - reject   : isi bab sebelum revisi agen ditolak
  * - manual   : snapshot manual dari panel Riwayat Versi
+ * - word     : isi bab sebelum ditimpa hasil simpan dari tab Word
  */
-export type SnapshotReason = 'edit' | 'agent' | 'analysis' | 'restore' | 'reject' | 'manual';
+export type SnapshotReason = 'edit' | 'agent' | 'analysis' | 'restore' | 'reject' | 'manual' | 'word';
 
 export const SNAPSHOT_REASONS: readonly SnapshotReason[] = [
   'edit',
@@ -19,6 +20,7 @@ export const SNAPSHOT_REASONS: readonly SnapshotReason[] = [
   'restore',
   'reject',
   'manual',
+  'word',
 ];
 
 /** Metadata satu snapshot — dibaca dari file sidecar `.json` di sebelah snapshot. */

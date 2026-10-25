@@ -15,7 +15,7 @@ import {
 
 export const dynamic = 'force-dynamic';
 
-const reasonSchema = z.enum(['edit', 'agent', 'analysis', 'restore', 'reject', 'manual']);
+const reasonSchema = z.enum(['edit', 'agent', 'analysis', 'restore', 'reject', 'manual', 'word']);
 
 const postSchema = z.object({
   path: z.string().min(1).max(500),

@@ -607,6 +607,7 @@
     "reasonRestore": "sebelum restore",
     "reasonReject": "sebelum tolak revisi",
     "reasonManual": "versi manual",
+    "reasonWord": "sebelum simpan dari Word",
     "viewDiff": "Lihat diff",
     "preview": "Pratinjau",
     "restore": "Pulihkan",

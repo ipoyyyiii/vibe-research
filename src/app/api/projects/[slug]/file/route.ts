@@ -44,15 +44,15 @@ const putSchema = z.object({
   /** Setuju mengosongkan berkas yang masih berisi. */
   allowEmpty: z.boolean().optional(),
   // Alasan snapshot versi: isi bab yang ada di disk disimpan dulu sebelum ditimpa.
-  // Kosong = tanpa riwayat (mis. simpan dari tab Word).
-  reason: z.enum(['edit', 'agent', 'analysis', 'restore', 'reject', 'manual']).optional(),
+  // Kosong = tanpa riwayat (mis. simpan biner dari tab Excel).
+  reason: z.enum(['edit', 'agent', 'analysis', 'restore', 'reject', 'manual', 'word']).optional(),
 });
 
 /** Simpan isi bab lama sebagai versi sebelum bab ditimpa (gagal = tak memblokir tulis). */
 async function snapshotBeforeWrite(
   folder: string,
   relative: string,
-  reason: 'edit' | 'agent' | 'analysis' | 'restore' | 'reject' | 'manual',
+  reason: 'edit' | 'agent' | 'analysis' | 'restore' | 'reject' | 'manual' | 'word',
 ): Promise<void> {
   try {
     await snapshotCurrent(folder, relative, reason);

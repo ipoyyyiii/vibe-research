@@ -607,6 +607,7 @@
     "reasonRestore": "before restore",
     "reasonReject": "before rejecting revision",
     "reasonManual": "manual version",
+    "reasonWord": "before saving from Word",
     "viewDiff": "View diff",
     "preview": "Preview",
     "restore": "Restore",

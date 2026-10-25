@@ -33,6 +33,7 @@ const REASON_KEY: Record<SnapshotReason, string> = {
   restore: 'versions.reasonRestore',
   reject: 'versions.reasonReject',
   manual: 'versions.reasonManual',
+  word: 'versions.reasonWord',
 };
 
 function reasonLabel(t: TranslateFn, reason: SnapshotReason): string {
