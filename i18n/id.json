@@ -37,7 +37,7 @@
   },
   "editor": {
     "noFile": "Belum ada dokumen terbuka",
-    "noFileHint": "Pilih .md di panel kiri, atau buat dokumen baru lewat tombol [+ Dokumen] di atas.",
+    "noFileHint": "Pilih file .md di panel kiri, atau buat baru lewat \"New document\" di atas.",
     "words": "kata",
     "saved": "Tersimpan ✓",
     "saving": "Menyimpan…",

@@ -41,6 +41,8 @@ const putSchema = z.object({
   content: z.string().max(14 * 1024 * 1024),
   // 'base64' = tulis binary (xlsx/csv/tsv dari tab Excel); default = teks.
   encoding: z.enum(['text', 'base64']).optional(),
+  /** Setuju mengosongkan berkas yang masih berisi. */
+  allowEmpty: z.boolean().optional(),
   // Alasan snapshot versi: isi bab yang ada di disk disimpan dulu sebelum ditimpa.
   // Kosong = tanpa riwayat (mis. simpan dari tab Word).
   reason: z.enum(['edit', 'agent', 'analysis', 'restore', 'reject', 'manual']).optional(),
@@ -81,6 +83,22 @@ export async function PUT(
       if (parsed.data.encoding === 'base64') {
         mtime = (await writeBinaryFile(folder, parsed.data.path, parsed.data.content)).mtime;
       } else {
+        // Guard anti-hilang: autosave dari editor sempat menimpa bab 6 KB
+        // dengan 0 byte setelah Ctrl+Z, tanpa peringatan apa pun. Menulis isi
+        // kosong di atas berkas yang berisi harus disengaja (allowEmpty).
+        const isEmpty = parsed.data.content.trim() === '';
+        if (isEmpty && !parsed.data.allowEmpty) {
+          const existing = await readTextFile(folder, parsed.data.path).catch(() => null);
+          if (existing && existing.content.trim() !== '') {
+            return NextResponse.json(
+              {
+                error:
+                  'Isi kosong ditolak: berkas ini masih berisi teks. Kalau memang ingin mengosongkan, hapus berkasnya atau kirim allowEmpty=true.',
+              },
+              { status: 409 },
+            );
+          }
+        }
         if (parsed.data.reason) {
           await snapshotBeforeWrite(folder, parsed.data.path, parsed.data.reason);
         }

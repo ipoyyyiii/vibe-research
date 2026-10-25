@@ -84,11 +84,16 @@ export function InsertResultModal({
             }
           | null;
         if (!alive) return;
+        // Abstrak bukan tempat tabel/gambar hasil analisis; dan default-nya
+        // harus bab hasil, bukan berkas pertama menurut abjad (dulu abstrak).
         const list = (data?.tree ?? data?.entries ?? [])
           .filter((entry) => entry.type === 'file' && /^dokumen\/.*\.md$/i.test(entry.path))
+          .filter((entry) => !/^(abstrak|instrumen)/i.test(entry.name))
           .map((entry) => ({ path: entry.path, name: entry.name }));
         setChapters(list);
-        setChapterPath((current) => current || (list[0]?.path ?? ''));
+        const preferred =
+          list.find((entry) => /(hasil|bab\s*4|bab\s*iv)/i.test(entry.path)) ?? list[list.length - 1];
+        setChapterPath((current) => current || (preferred?.path ?? ''));
       } catch {
         if (alive) setChapters([]);
       }

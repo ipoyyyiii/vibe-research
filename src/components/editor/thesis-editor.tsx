@@ -131,6 +131,7 @@ function EditorSurface({
 }) {
   const t = useT();
   const [status, setStatus] = useState<SaveStatus>('clean');
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [words, setWords] = useState(0);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [imgError, setImgError] = useState<string | null>(null);
@@ -401,15 +402,21 @@ function EditorSurface({
         body: JSON.stringify({ path: filePathRef.current, content: md, reason: 'edit' }),
       });
       if (!res.ok) {
+        // Tampilkan alasan dari server: "isi kosong ditolak" jauh lebih
+        // menolong daripada "gagal menyimpan" tanpa keterangan.
+        const data = (await res.json().catch(() => null)) as { error?: string } | null;
+        setSaveError(data?.error ?? t('editor.saveFailed'));
         setStatus('error');
         return;
       }
+      setSaveError(null);
       setStatus('clean');
       setLastSavedAt(new Date());
     } catch {
+      setSaveError(t('editor.saveFailed'));
       setStatus('error');
     }
-  }, [editor, slug]);
+  }, [editor, slug, t]);
 
   const scheduleSave = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -522,7 +529,7 @@ function EditorSurface({
         <span>
           {words} {t('editor.words')}
         </span>
-        <SaveStatusLabel status={status} lastSavedAt={lastSavedAt} />
+        <SaveStatusLabel status={status} lastSavedAt={lastSavedAt} message={saveError} />
       </footer>
 
       {/* Diff review (fase 5): baris hijau=masuk, merah=kelaar. */}
@@ -556,10 +563,18 @@ function EditorSurface({
   );
 }
 
-function SaveStatusLabel({ status, lastSavedAt }: { status: SaveStatus; lastSavedAt: Date | null }) {
+function SaveStatusLabel({
+  status,
+  lastSavedAt,
+  message,
+}: {
+  status: SaveStatus;
+  lastSavedAt: Date | null;
+  message?: string | null;
+}) {
   const t = useT();
   if (status === 'saving') return <span className="text-amber-600">{t('editor.saving')}</span>;
-  if (status === 'error') return <span className="text-red-600">{t('editor.saveFailed')}</span>;
+  if (status === 'error') return <span className="text-red-600">{message ?? t('editor.saveFailed')}</span>;
   if (status === 'dirty') return <span>{t('editor.unsaved')}</span>;
   return (
     <span>

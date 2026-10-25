@@ -37,7 +37,7 @@
   },
   "editor": {
     "noFile": "No document open",
-    "noFileHint": "Pick a .md in the left panel, or create one via [+ Document] above.",
+    "noFileHint": "Pick a .md in the left panel, or create one with \"New document\" above.",
     "words": "words",
     "saved": "Saved ✓",
     "saving": "Saving…",
