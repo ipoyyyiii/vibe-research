@@ -674,6 +674,23 @@ export function WordTab({
     }
   }, [version, booted, wcReady, throwFile]);
 
+  // Kalau lemparan gagal (bukan sekadar diabaikan WordCraft), coba ulang dua
+  // kali otomatis sebelum menampilkan tombol manual — race dengan boot wasm
+  // adalah penyebab paling sering.
+  const retryRef = useRef(0);
+  useEffect(() => {
+    if (!throwFailed || thrown) {
+      retryRef.current = 0;
+      return undefined;
+    }
+    if (retryRef.current >= 2) return undefined;
+    const timer = window.setTimeout(() => {
+      retryRef.current += 1;
+      void throwFile();
+    }, 2000);
+    return () => window.clearTimeout(timer);
+  }, [throwFailed, thrown, throwFile]);
+
   // Simpan balik bytes hasil Word ke file bab.
   // WordCraft nyimpen .docx (format aslinya) walau file babnya .md → route
   // word-save mengubahnya ke markdown dulu sebelum ditulis balik.
@@ -819,9 +836,17 @@ export function WordTab({
         <p className="shrink-0 px-2 py-1 text-[11px] text-muted-foreground">{t('word.thrown')}</p>
       )}
       {throwFailed && (
-        <p className="flex shrink-0 items-center gap-1 px-2 py-1 text-[11px] text-amber-700">
-          <TriangleAlert size={11} /> {t('word.openFailed')}
-        </p>
+        <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-amber-300 bg-amber-50 px-2 py-1 text-[11px] text-amber-900">
+          <TriangleAlert size={11} className="shrink-0" />
+          <span className="min-w-0 flex-1">{t('word.openFailed')}</span>
+          <button
+            type="button"
+            onClick={() => void throwFile()}
+            className="shrink-0 rounded border border-amber-400 px-1.5 py-0.5 font-medium hover:bg-amber-100"
+          >
+            {t('word.retryOpen')}
+          </button>
+        </div>
       )}
 
       {/* Hint sekali: font bawaan Windows via "Load system fonts" */}

@@ -379,7 +379,7 @@
     "loading": "Loading the Word engine (~42 MB, once per session)…",
     "openBtn": "Open in Word",
     "thrown": "File thrown into Word — check the pane. Not showing? click again or drag it in manually.",
-    "openFailed": "Auto-open failed — drag the chapter file into the Word pane, or click this button again.",
+    "openFailed": "WordCraft has not shown this file yet. If the pane is still on its start screen, click Try again, or use File → Open in WordCraft and pick the file.",
     "saveAsk": "Word saved “{name}” — put it back into the chapter?",
     "saveConvert": "Word saved “{name}” — converting it to markdown first, put it back into the chapter?",
     "saveHint": "Word saved “{name}” — only .md files round-trip automatically; .docx/.pdf go through the Export menu.",
@@ -405,7 +405,8 @@
     "fontPackDoneCleaned": "Added {n} fonts and cleaned {m} old ones — the WordCraft list is now as tidy as Word's.",
     "fontPackFail": "The font pack couldn't be written to browser storage (try a hard refresh). Word still works.",
     "sysFontHint": "Want your Windows fonts (Calibri, Segoe UI, etc.) too? In WordCraft: open the Fonts menu → \"Load system fonts\" (Chrome/Edge), once is enough.",
-    "sysFontHintNo": "This browser doesn't support \"Load system fonts\" (Chrome/Edge only). Standard Word fonts (Calibri, Times New Roman, Arial, Cambria, Georgia, etc.) already come with the pack — ready to use."
+    "sysFontHintNo": "This browser doesn't support \"Load system fonts\" (Chrome/Edge only). Standard Word fonts (Calibri, Times New Roman, Arial, Cambria, Georgia, etc.) already come with the pack — ready to use.",
+    "retryOpen": "Try again"
   },
   "excel": {
     "title": "Excel · GridCraft",
